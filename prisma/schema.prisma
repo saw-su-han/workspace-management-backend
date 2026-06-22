@@ -1,0 +1,245 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client-js"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  name         String
+  email        String  @unique
+  password     String
+  avatar       String?
+  refreshToken String?
+
+  memberships     WorkspaceMember[]
+  projectMembers  ProjectMember[]
+  createdProjects Project[]
+  assignedTasks   Task[]            @relation("TaskAssignee")
+  comments        Comment[]
+
+  activityLogs ActivityLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userNotifications UserNotification[]
+
+  sentInvitations     Invitation[] @relation("InvitationSender")
+  receivedInvitations Invitation[] @relation("InvitationReceiver")
+}
+
+model Workspace {
+  id   Int     @id @default(autoincrement())
+  name String  @unique
+  logo String?
+
+  members      WorkspaceMember[]
+  invitations  Invitation[]
+  projects     Project[]
+  activityLogs ActivityLog[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  notifications Notification[]
+  tasks         Task[]
+}
+
+model WorkspaceMember {
+  workspaceId Int
+  userId      Int
+
+  role Role
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+
+  @@id([workspaceId, userId])
+}
+
+model Invitation {
+  id Int @id @default(autoincrement())
+
+  workspaceId Int
+
+  invitedById Int
+  invitedToId Int?
+
+  email  String
+  token  String           @unique
+  role   Role
+  status InvitationStatus @default(PENDING)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  invitedBy User @relation("InvitationSender", fields: [invitedById], references: [id])
+
+  invitedTo User? @relation("InvitationReceiver", fields: [invitedToId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id Int @id @default(autoincrement())
+
+  workspaceId Int
+  createdById Int
+
+  name        String
+  description String?
+
+  status ProjectStatus @default(PLANNING)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  members ProjectMember[]
+  tasks   Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectMember {
+  projectId Int
+  userId    Int
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@id([projectId, userId])
+}
+
+model Task {
+  id Int @id @default(autoincrement())
+
+  workspaceId Int
+  projectId   Int
+
+  assignedTo Int?
+
+  title       String
+  description String?
+
+  priority Priority   @default(MEDIUM)
+  status   TaskStatus @default(TODO)
+
+  dueDate   DateTime?
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  project   Project   @relation(fields: [projectId], references: [id])
+
+  assignee User? @relation("TaskAssignee", fields: [assignedTo], references: [id])
+
+  comments Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id Int @id @default(autoincrement())
+
+  taskId   Int
+  authorId Int
+
+  content String
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id Int @id @default(autoincrement())
+
+  workspaceId Int
+  userId      Int
+
+  action     String
+  entityType String
+  entityId   Int
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  workspaceId Int
+
+  type    String
+  message String
+
+  taskId Int?
+
+  users UserNotification[]
+
+  createdAt DateTime @default(now())
+}
+
+model UserNotification {
+  userId         Int
+  notificationId Int
+
+  isRead Boolean @default(false)
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([userId, notificationId])
+}
