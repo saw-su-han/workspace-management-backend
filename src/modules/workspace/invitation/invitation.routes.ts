@@ -7,6 +7,9 @@ import { upload } from "../../../middleware/upload.middleware";
 import { signupInvitationController } from "../../auth/signupInvitation.controller";
 import { getWorkSpaceMemberService } from "./invitation.services";
 import { getWorkSpaceMembersController } from "./getMembers.controller";
+import { updateMemberRoleController } from "./updateMemberRole.controller";
+import ro from "zod/v4/locales/ro.js";
+import { removeMemberController } from "./removeMember.controller";
 
 const router = express.Router();
 
@@ -17,4 +20,6 @@ router.get(
   authMiddleware,
   asyncHandler(getWorkSpaceMembersController),
 );
+router.patch("/members/roles", authMiddleware, updateMemberRoleController);
+router.delete("/members", authMiddleware, removeMemberController);
 export default router;

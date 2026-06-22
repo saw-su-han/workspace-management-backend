@@ -177,23 +177,92 @@ export const getWorkSpaceMemberService = async (
     throw new AppError("Only Owner or Admin can view members", 403);
   }
 
-  const members = await prisma.workspaceMember.findMany({
+  const members = await prisma.user.findMany({
     where: {
-      workspaceId,
+      memberships: {
+        some: {
+          workspaceId,
+        },
+      },
     },
     select: {
-      role: true,
-      user: {
+      name: true,
+      email: true,
+      memberships: {
         select: {
-          name: true,
-          email: true,
+          role: true,
         },
       },
     },
   });
   return members.map((member) => ({
-    name: member.user.name,
-    email: member.user.email,
-    role: member.role,
+    name: member.name,
+    email: member.email,
+    role: member.memberships[0]?.role,
+    status: "ACTIVE",
   }));
+};
+
+export const updateMemberRoleService = async (
+  workspaceId: number,
+  ownerId: number,
+  targetId: number,
+  newRole: "ADMIN" | "MEMBER" | "OWNER",
+) => {
+  //check
+  const ownerMembership = await prisma.workspaceMember.findFirst({
+    where: {
+      workspaceId,
+      userId: ownerId,
+    },
+  });
+
+  if (!ownerMembership || ownerMembership.role != "OWNER") {
+    throw new AppError("Only owner can update member role", 403);
+  }
+
+  if (ownerId === targetId) {
+    throw new AppError("Owner cannot change own role");
+  }
+
+  if (newRole === "OWNER") {
+    throw new AppError("Cannot assign Owner role");
+  }
+
+  const targetMembership = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId: targetId,
+      },
+    },
+  });
+  console.log({
+    workspaceId,
+    ownerId,
+    targetId,
+    newRole,
+  });
+
+  if (!targetMembership) {
+    throw new AppError("User is not a member of this workspace", 404);
+  }
+
+  if (newRole === targetMembership.role) {
+    throw new AppError("Cannot change role to same role");
+  }
+
+  await prisma.workspaceMember.update({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId: targetId,
+      },
+    },
+    data: {
+      role: newRole,
+    },
+  });
+
+  return { success: true, message: "Member role updated successfully" };
 };
