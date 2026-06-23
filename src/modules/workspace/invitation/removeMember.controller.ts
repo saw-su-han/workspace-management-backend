@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { removeMemberService } from "./removeMember.Service";
+import { removeMemberService } from "./removeMember.service";
 
 export const removeMemberController = async (req: any, res: Response) => {
   const workspaceId = req.user.workspaceId;

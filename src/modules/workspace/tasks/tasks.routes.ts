@@ -1,0 +1,50 @@
+import express from "express";
+import { authMiddleware } from "../../../middleware/auth.middleware";
+import {
+  createTaskController,
+  deleteTaskController,
+  getTaskDetailsController,
+  getTasksController,
+  updateTaskController,
+  updateTaskStatusController,
+} from "./tasks.controller";
+import { updateTaskSchema } from "./tasks.schema";
+import { validate } from "../../../middleware/vilidate.middleware";
+
+const router = express.Router();
+
+router.post(
+  "/workspaces/:workspaceId/tasks",
+  authMiddleware,
+  createTaskController,
+);
+router.get(
+  "/workspaces/:workspaceId/tasks",
+  authMiddleware,
+  getTasksController,
+);
+router.get(
+  "/workspaces/:workspaceId/tasks/:taskId",
+  authMiddleware,
+  getTaskDetailsController,
+);
+
+router.patch(
+  "/workspaces/:workspaceId/tasks/:taskId",
+  authMiddleware,
+  validate(updateTaskSchema),
+  updateTaskController,
+);
+
+router.patch(
+  "/workspaces/:workspaceId/tasks/:taskId/status",
+  authMiddleware,
+  updateTaskStatusController,
+);
+
+router.delete(
+  "/workspaces/:workspaceId/tasks/:taskId",
+  authMiddleware,
+  deleteTaskController,
+);
+export default router;

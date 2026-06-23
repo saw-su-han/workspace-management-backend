@@ -247,6 +247,8 @@ export const getProfileService = async (userId: number) => {
 
 export const updateProfileService = async (
   userId: number,
+  workspaceId: number,
+  projectId: number,
   data: { name?: string } = {},
   files: RegisterFiles = {},
 ) => {

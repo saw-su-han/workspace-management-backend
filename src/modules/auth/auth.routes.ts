@@ -16,6 +16,7 @@ import {
   getProfileMiddleware,
 } from "../../middleware/auth.middleware";
 import { signupInvitationController } from "./signupInvitation.controller";
+import { getProjectDetailsController } from "../workspace/projects/project.controller";
 
 const router = express.Router();
 
@@ -46,5 +47,10 @@ router.patch(
   authMiddleware,
   upload.fields([{ name: "avatar", maxCount: 1 }]),
   asyncHandler(updateProfileController),
+);
+router.get(
+  "/:workspaceId/projects/:projectId",
+  authMiddleware,
+  asyncHandler(getProjectDetailsController),
 );
 export default router;

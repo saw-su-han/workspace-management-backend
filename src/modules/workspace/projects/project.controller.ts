@@ -1,0 +1,150 @@
+import { success } from "zod";
+import { updateProfileService } from "../../auth/auth.service";
+import {
+  assignProjectService,
+  createProjectService,
+  deleteProjectService,
+  getProjectDetailsService,
+  getProjectService,
+  updateProjectService,
+} from "./project.service";
+
+export const createProjectController = async (req: any, res: any) => {
+  const workspaceId = Number(req.params.workspaceId);
+
+  if (isNaN(workspaceId)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid workspaceId",
+    });
+  }
+
+  const project = await createProjectService(
+    req.user.userId,
+    workspaceId,
+    req.body,
+  );
+
+  return res.status(201).json({
+    success: true,
+    data: project,
+  });
+};
+
+//
+export const getProjectController = async (req: any, res: any) => {
+  const workspaceId = Number(req.params.workspaceId);
+
+  if (isNaN(workspaceId)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid workspaceId",
+    });
+  }
+
+  const project = await getProjectService(req.user.userId, workspaceId);
+
+  return res.status(200).json({
+    success: true,
+    data: project,
+  });
+};
+
+//
+
+export const getProjectDetailsController = async (req: any, res: any) => {
+  try {
+    const workspaceId = Number(req.params.workspaceId);
+    const projectId = Number(req.params.projectId);
+
+    if (isNaN(workspaceId) || isNaN(projectId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid IDs",
+      });
+    }
+
+    const project = await getProjectDetailsService(
+      req.user.userId,
+      workspaceId,
+      projectId,
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: project,
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const assignProjectController = async (req: any, res: any) => {
+  try {
+    const workspaceId = Number(req.params.workspaceId);
+    const projectId = Number(req.params.projectId);
+
+    const requesterId = req.user.userId; // logged-in user
+    const { userId } = req.body; // user to assign
+
+    const result = await assignProjectService(
+      requesterId,
+      workspaceId,
+      projectId,
+      userId,
+    );
+
+    return res.status(201).json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const updateProjectController = async (req: any, res: any) => {
+  try {
+    const workspaceId = Number(req.params.workspaceId);
+    const projectId = Number(req.params.projectId);
+    const userId = req.user.userId;
+
+    const result = await updateProjectService(
+      userId,
+      workspaceId,
+      projectId,
+      req.body,
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const deleteProjectController = async (req: any, res: any) => {
+  const workspaceId = Number(req.params.workspaceId);
+  const projectId = Number(req.params.projectId);
+
+  const result = await deleteProjectService(
+    req.user.userId,
+    workspaceId,
+    projectId,
+    req.body.confirm,
+  );
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
