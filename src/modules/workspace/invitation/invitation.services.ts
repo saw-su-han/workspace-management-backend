@@ -22,6 +22,16 @@ export const inviteUserService = async (
     },
   });
 
+  const log = await prisma.activityLog.create({
+    data: {
+      workspaceId,
+      userId: invitedById,
+      action: `Invited ${email} to workspace`,
+      entityType: "USER",
+      entityId: 0,
+    },
+  });
+
   if (!inviterMembership) {
     throw new AppError("You are not a member of this workspace", 403);
   }

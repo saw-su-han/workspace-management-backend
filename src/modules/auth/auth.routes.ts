@@ -1,5 +1,5 @@
 import express from "express";
-import { validate } from "../../middleware/vilidate.middleware";
+// import { validate } from "../../middleware/vilidate.middleware";
 import {
   getProfileController,
   loginController,
@@ -34,7 +34,7 @@ router.post(
   asyncHandler(signupInvitationController),
 );
 
-router.post("/login", validate(loginSchema), asyncHandler(loginController));
+router.post("/login", asyncHandler(loginController));
 router.post("/refresh", asyncHandler(refreshTokenController));
 router.post("/logout", authMiddleware, asyncHandler(logoutController));
 router.get(

@@ -1,4 +1,4 @@
-import { email, z } from "zod";
+import { z } from "zod";
 
 export const registerSchema = z.object({
   workspaceName: z.string().min(2),

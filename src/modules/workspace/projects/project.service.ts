@@ -21,6 +21,7 @@ export const createProjectService = async (
       },
     },
   });
+
   if (!member) throw new Error("You are not a member of this workspace");
 
   if (member.role === "MEMBER") {
@@ -36,12 +37,25 @@ export const createProjectService = async (
       createdById: userId,
     },
   });
+
+  await prisma.activityLog.create({
+    data: {
+      workspaceId,
+      userId,
+      action: `Created project ${project.name}`,
+      entityType: "PROJECT",
+      entityId: project.id,
+    },
+  });
+
   return project;
 };
 
 export const getProjectService = async (
   userId: number,
   workspaceId: number,
+  search?: string,
+  status?: "PLANNING" | "ACTIVE" | "COMPLETED",
 ) => {
   const member = await prisma.workspaceMember.findUnique({
     where: {
@@ -51,28 +65,39 @@ export const getProjectService = async (
       },
     },
   });
-  if (!member) throw new Error("You are not a member of this workspace");
-  if (member.role !== "MEMBER") {
-    return await prisma.project.findMany({
-      where: {
-        workspaceId,
-      },
-    });
+
+  if (!member) {
+    throw new Error("You are not a member of this workspace");
   }
+
   return await prisma.project.findMany({
     where: {
       workspaceId,
-    },
-    select: {
-      members: {
-        select: {
-          userId: true,
-        },
-      },
+      isDeleted: false,
+
+      // SEARCH
+      name: search
+        ? {
+            contains: search,
+            mode: "insensitive",
+          }
+        : undefined,
+
+      // STATUS FILTER
+      status: status ?? undefined,
+
+      ...(member.role === "MEMBER"
+        ? {
+            members: {
+              some: {
+                userId,
+              },
+            },
+          }
+        : {}),
     },
   });
 };
-
 //getProjectDetails
 export const getProjectDetailsService = async (
   userId: number,

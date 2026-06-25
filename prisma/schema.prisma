@@ -59,8 +59,10 @@ model User {
 
   activityLogs ActivityLog[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
 
   userNotifications UserNotification[]
 
@@ -72,6 +74,9 @@ model Workspace {
   id   Int     @id @default(autoincrement())
   name String  @unique
   logo String?
+
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
 
   members      WorkspaceMember[]
   invitations  Invitation[]
@@ -92,6 +97,7 @@ model WorkspaceMember {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isDeleted Boolean   @default(false)
 
   joinedAt DateTime @default(now())
 
@@ -133,6 +139,8 @@ model Project {
 
   startDate DateTime?
   endDate   DateTime?
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
 
@@ -149,8 +157,8 @@ model ProjectMember {
   projectId Int
   userId    Int
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 
   assignedAt DateTime @default(now())
 
@@ -171,6 +179,9 @@ model Task {
   priority Priority   @default(MEDIUM)
   status   TaskStatus @default(TODO)
 
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
   dueDate   DateTime?
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   project   Project   @relation(fields: [projectId], references: [id])
@@ -189,9 +200,11 @@ model Comment {
   taskId   Int
   authorId Int
 
-  content String
+  content   String
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
 
-  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task   Task @relation(fields: [taskId], references: [id])
   author User @relation(fields: [authorId], references: [id])
 
   createdAt DateTime @default(now())
@@ -206,9 +219,9 @@ model ActivityLog {
   action     String
   entityType String
   entityId   Int
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
+  metadata   Json?
+  workspace  Workspace @relation(fields: [workspaceId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
 }

@@ -1,4 +1,5 @@
 import {
+  assignTaskService,
   createTaskService,
   deleteTaskService,
   getTaskDetailsService,
@@ -8,31 +9,54 @@ import {
 } from "./tasks.service";
 
 export const createTaskController = async (req: any, res: any) => {
-  try {
-    const workspaceId = Number(req.params.workspaceId);
+  const userId = req.user.userId;
+  const workspaceId = Number(req.params.workspaceId);
 
-    const result = await createTaskService(
-      req.user.userId,
-      workspaceId,
-      req.body,
-    );
+  const task = await createTaskService(userId, workspaceId, req.body);
 
-    return res.status(201).json({
-      success: true,
-      data: result,
-    });
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
+  res.json({
+    success: true,
+    data: task,
+  });
+};
+
+export const assignTaskController = async (req: any, res: any) => {
+  const userId = req.user.userId;
+  const workspaceId = Number(req.params.workspaceId);
+  const taskId = Number(req.params.taskId);
+  const { assignedTo } = req.body;
+
+  const task = await assignTaskService(userId, workspaceId, taskId, assignedTo);
+
+  res.json({
+    success: true,
+    data: task,
+  });
 };
 export const getTasksController = async (req: any, res: any) => {
   try {
     const workspaceId = Number(req.params.workspaceId);
 
-    const result = await getTasksService(req.user.userId, workspaceId);
+    if (isNaN(workspaceId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid workspaceId",
+      });
+    }
+
+    const userId = req.user.userId;
+
+    // query
+    const { search, status, assignedTo, projectId } = req.query;
+
+    const result = await getTasksService(
+      userId,
+      workspaceId,
+      search,
+      status,
+      assignedTo ? Number(assignedTo) : undefined,
+      projectId ? Number(projectId) : undefined,
+    );
 
     return res.status(200).json({
       success: true,
@@ -45,7 +69,6 @@ export const getTasksController = async (req: any, res: any) => {
     });
   }
 };
-
 export const getTaskDetailsController = async (req: any, res: any) => {
   try {
     const workspaceId = Number(req.params.workspaceId);

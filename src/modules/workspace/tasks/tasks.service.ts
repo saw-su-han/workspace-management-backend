@@ -2,6 +2,7 @@ import { th } from "zod/locales";
 import { AppError } from "../../../errors/AppError";
 import { prisma } from "../../../utils/prisma";
 import da from "zod/v4/locales/da.js";
+import { createNotificationService } from "../notifications/notification.service";
 
 //createTasks
 export const createTaskService = async (
@@ -13,7 +14,6 @@ export const createTaskService = async (
     description?: string;
     priority?: "LOW" | "MEDIUM" | "HIGH";
     dueDate?: string;
-    assignedTo?: number;
   },
 ) => {
   const member = await prisma.workspaceMember.findUnique({
@@ -25,12 +25,8 @@ export const createTaskService = async (
     },
   });
 
-  if (!member) {
-    throw new AppError("You are not a member of this workspace");
-  }
-
-  if (member.role === "MEMBER") {
-    throw new AppError("You are not authorized to create tasks");
+  if (!member || member.role === "MEMBER") {
+    throw new AppError("Not authorized to create tasks", 403);
   }
 
   const project = await prisma.project.findFirst({
@@ -41,25 +37,9 @@ export const createTaskService = async (
   });
 
   if (!project) {
-    throw new AppError("Project not found in this workspace");
+    throw new AppError("Project not found", 404);
   }
 
-  if (data.assignedTo) {
-    const assignMember = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId: data.assignedTo,
-        },
-      },
-    });
-
-    if (!assignMember) {
-      throw new AppError("Assigned user is  not exist in this workspace");
-    }
-  }
-
-  //create
   const task = await prisma.task.create({
     data: {
       title: data.title,
@@ -67,20 +47,109 @@ export const createTaskService = async (
       priority: data.priority ?? "MEDIUM",
       status: "TODO",
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
-
       projectId: project.id,
-      workspaceId: project.workspaceId,
+      workspaceId,
+      assignedTo: null,
+    },
+  });
 
-      assignedTo: data.assignedTo ?? null,
+  await prisma.activityLog.create({
+    data: {
+      workspaceId,
+      userId,
+      action: `Created task ${task.title}`,
+      entityType: "TASK",
+      entityId: task.id,
     },
   });
 
   return task;
 };
 
+export const assignTaskService = async (
+  userId: number,
+  workspaceId: number,
+  taskId: number,
+  assignedTo: number,
+) => {
+  const task = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      workspaceId,
+      isDeleted: false,
+    },
+  });
+
+  if (!task) {
+    throw new AppError("Task not found", 404);
+  }
+
+  const member = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId: assignedTo,
+      },
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+          avatar: true,
+        },
+      },
+    },
+  });
+
+  if (!member) {
+    throw new AppError("User is not a member of this workspace", 403);
+  }
+
+  const assignedUser = member.user;
+
+  const updatedTask = await prisma.task.update({
+    where: {
+      id: taskId,
+    },
+    data: {
+      assignedTo,
+    },
+  });
+
+  //  Activity Log
+  await prisma.activityLog.create({
+    data: {
+      workspaceId,
+      userId,
+      action: `Assigned task "${task.title}" to ${assignedUser.name} (${assignedUser.email})`,
+      entityType: "TASK",
+      entityId: task.id,
+    },
+  });
+
+  //  Notification
+  await createNotificationService({
+    workspaceId,
+    type: "TASK_ASSIGNED",
+    message: `You were assigned to task "${task.title}" `,
+    taskId: task.id,
+    userIds: [assignedTo],
+  });
+
+  return updatedTask;
+};
+
 //getTasks
-export const getTasksService = async (userId: number, workspaceId: number) => {
-  // Check workspace
+export const getTasksService = async (
+  userId: number,
+  workspaceId: number,
+  search?: string,
+  status?: "TODO" | "IN_PROGRESS" | "DONE",
+  assignedTo?: number,
+  projectId?: number,
+) => {
+  // 1. Check workspace membership
   const member = await prisma.workspaceMember.findUnique({
     where: {
       workspaceId_userId: {
@@ -91,48 +160,36 @@ export const getTasksService = async (userId: number, workspaceId: number) => {
   });
 
   if (!member) {
-    throw new Error("You are not a member of this workspace");
+    throw new AppError("You are not a member of this workspace", 403);
   }
 
-  //  OWNER / ADMIN
-  if (member.role !== "MEMBER") {
-    return await prisma.task.findMany({
-      where: {
-        workspaceId,
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        priority: true,
-        status: true,
-        dueDate: true,
+  const baseWhere: any = {
+    workspaceId,
+    isDeleted: false,
 
-        assignee: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-          },
-        },
+    title: search
+      ? {
+          contains: search,
+          mode: "insensitive",
+        }
+      : undefined,
 
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
+    status: status ?? undefined,
+
+    assignedTo: assignedTo ?? undefined,
+
+    // PROJECT FILTER
+    projectId: projectId ?? undefined,
+  };
+
+  if (member.role === "MEMBER") {
+    baseWhere.assignedTo = userId;
   }
 
-  // assigned MEMBER
+  // Query
   return await prisma.task.findMany({
-    where: {
-      workspaceId,
-      assignedTo: userId,
-    },
+    where: baseWhere,
+
     select: {
       id: true,
       title: true,
@@ -211,7 +268,7 @@ export const getTaskDetailsService = async (
   });
 
   if (!task) {
-    throw new Error("Task not found");
+    throw new AppError("Task not found", 403);
   }
 
   // MEMBER
@@ -228,7 +285,7 @@ export const getTaskDetailsService = async (
     });
 
     if (!isAssignedToUser && !isInAssignedProject) {
-      throw new Error("You are not allowed to view this task");
+      throw new AppError("You are not allowed to view this task", 403);
     }
   }
 
@@ -261,12 +318,12 @@ export const updateTaskService = async (
   });
 
   if (!member) {
-    throw new Error("You are not a member of this workspace");
+    throw new AppError("You are not a member of this workspace", 403);
   }
 
   //  Only OWNER / ADMIN can update
   if (member.role === "MEMBER") {
-    throw new Error("You are not authorized to update tasks");
+    throw new AppError("You are not authorized to update tasks", 403);
   }
 
   //  Check task exists in workspace
@@ -274,11 +331,12 @@ export const updateTaskService = async (
     where: {
       id: taskId,
       workspaceId,
+      isDeleted: false,
     },
   });
 
   if (!task) {
-    throw new Error("Task not found in this workspace");
+    throw new AppError("Task not found in this workspace", 403);
   }
 
   // Validate assigned user
@@ -293,9 +351,10 @@ export const updateTaskService = async (
     });
 
     if (!assignedMember) {
-      throw new Error("Assigned user is not in this workspace");
+      throw new AppError("Assigned user is not in this workspace", 403);
     }
   }
+  const oldStatus = task.status;
 
   // 5. Update task
   const updatedTask = await prisma.task.update({
@@ -311,7 +370,19 @@ export const updateTaskService = async (
       assignedTo: data.assignedTo,
     },
   });
-
+  await prisma.activityLog.create({
+    data: {
+      workspaceId,
+      userId,
+      action: `Changed task ${task.title} status from ${oldStatus} to ${updatedTask.status}`,
+      entityType: "TASK",
+      entityId: task.id,
+      metadata: {
+        from: oldStatus,
+        to: updatedTask,
+      },
+    },
+  });
   return updatedTask;
 };
 
@@ -338,15 +409,16 @@ export const updateTaskStatusService = async (
     where: {
       id: taskId,
       workspaceId,
+      isDeleted: false,
     },
   });
 
   if (!task) {
-    throw new AppError("Task not found");
+    throw new AppError("Task not found", 403);
   }
 
   if (task.assignedTo !== userId) {
-    throw new AppError("You can only update your assigned task");
+    throw new AppError("You can only update your assigned task", 403);
   }
   const statusMap: any = {
     todo: "TODO",
@@ -381,11 +453,11 @@ export const deleteTaskService = async (
   });
 
   if (!member) {
-    throw new Error("You are not a member of this workspace");
+    throw new AppError("You are not a member of this workspace", 403);
   }
 
   if (member.role === "MEMBER") {
-    throw new Error("You are not authorized to delete tasks");
+    throw new AppError("You are not authorized to delete tasks", 403);
   }
 
   const task = await prisma.task.findFirst({
@@ -396,7 +468,7 @@ export const deleteTaskService = async (
   });
 
   if (!task) {
-    throw new Error("Task not found in this workspace");
+    throw new AppError("Task not found in this workspace", 403);
   }
 
   const deletedTask = await prisma.task.delete({

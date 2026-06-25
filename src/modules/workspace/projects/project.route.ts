@@ -13,12 +13,7 @@ import { validate } from "../../../middleware/vilidate.middleware";
 
 const router = express.Router();
 
-router.post(
-  "/:workspaceId/projects",
-  authMiddleware,
-  validate(createProjectSchema),
-  createProjectController,
-);
+router.post("/:workspaceId/projects", authMiddleware, createProjectController);
 router.get("/:workspaceId/projects", authMiddleware, getProjectController);
 
 router.get(

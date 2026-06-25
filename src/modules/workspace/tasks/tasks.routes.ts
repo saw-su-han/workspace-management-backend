@@ -1,6 +1,7 @@
 import express from "express";
 import { authMiddleware } from "../../../middleware/auth.middleware";
 import {
+  assignTaskController,
   createTaskController,
   deleteTaskController,
   getTaskDetailsController,
@@ -18,6 +19,13 @@ router.post(
   authMiddleware,
   createTaskController,
 );
+
+router.patch(
+  "/workspaces/:workspaceId/tasks/:taskId/assign",
+  authMiddleware,
+  assignTaskController,
+);
+
 router.get(
   "/workspaces/:workspaceId/tasks",
   authMiddleware,

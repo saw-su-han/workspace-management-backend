@@ -33,21 +33,35 @@ export const createProjectController = async (req: any, res: any) => {
 
 //
 export const getProjectController = async (req: any, res: any) => {
-  const workspaceId = Number(req.params.workspaceId);
+  try {
+    const workspaceId = Number(req.params.workspaceId);
 
-  if (isNaN(workspaceId)) {
-    return res.status(400).json({
+    if (isNaN(workspaceId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid workspaceId",
+      });
+    }
+
+    const userId = req.user.userId;
+    const { search, status } = req.query;
+    const project = await getProjectService(
+      userId,
+      workspaceId,
+      search,
+      status,
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: project,
+    });
+  } catch (error: any) {
+    return res.status(error.statusCode || 400).json({
       success: false,
-      message: "Invalid workspaceId",
+      message: error.message,
     });
   }
-
-  const project = await getProjectService(req.user.userId, workspaceId);
-
-  return res.status(200).json({
-    success: true,
-    data: project,
-  });
 };
 
 //

@@ -5,8 +5,7 @@ import { generateRefreshToken, generateToken } from "../../utils/jwt.utility";
 import { AppError } from "../../errors/AppError";
 import { RegisterFiles } from "./auth.types";
 import jwt from "jsonwebtoken";
-import { number } from "zod";
-import th from "zod/v4/locales/th.js";
+
 export const register = async (data: registerInput, files: RegisterFiles) => {
   const { workspaceName, email, name, password } = data;
 
