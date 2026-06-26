@@ -28,6 +28,7 @@ export const createProjectService = async (
   if (member.role === "MEMBER") {
     throw new Error("You are not authorized to create projects");
   }
+
   const project = await prisma.project.create({
     data: {
       name: data.name,
@@ -197,6 +198,22 @@ export const assignProjectService = async (
     throw new Error("You are not authorized to assign members");
   }
 
+  const assignee = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId: targetUserId,
+      },
+    },
+  });
+
+  if (!assignee) {
+    throw new AppError("Assigned user is not a workspace member", 404);
+  }
+
+  if (requester.role === "ADMIN" && assignee.role !== "MEMBER") {
+    throw new AppError("Admin can only assign tasks to members", 403);
+  }
   // Check project belongs to workspace
   const project = await prisma.project.findFirst({
     where: {

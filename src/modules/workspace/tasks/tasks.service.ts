@@ -80,29 +80,39 @@ export const assignTaskService = async (
     throw new AppError("Task not found", 404);
   }
 
-  const member = await prisma.workspaceMember.findUnique({
+  const assigner = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId,
+      },
+    },
+  });
+
+  if (!assigner) {
+    throw new AppError("You are not a workspace member", 403);
+  }
+
+  const assignee = await prisma.workspaceMember.findUnique({
     where: {
       workspaceId_userId: {
         workspaceId,
         userId: assignedTo,
       },
     },
-    select: {
-      user: {
-        select: {
-          name: true,
-          email: true,
-          avatar: true,
-        },
-      },
-    },
   });
 
-  if (!member) {
-    throw new AppError("User is not a member of this workspace", 403);
+  if (!assignee) {
+    throw new AppError("Assigned user is not a workspace member", 404);
   }
 
-  const assignedUser = member.user;
+  if (assigner.role === "MEMBER") {
+    throw new AppError("Members cannot assign tasks", 403);
+  }
+
+  if (assigner.role === "ADMIN" && assignee.role !== "MEMBER") {
+    throw new AppError("Admin can only assign tasks to members", 403);
+  }
 
   const updatedTask = await prisma.task.update({
     where: {
@@ -113,29 +123,35 @@ export const assignTaskService = async (
     },
   });
 
-  //  Activity Log
+  const assignedUser = await prisma.user.findUnique({
+    where: { id: assignedTo },
+    select: {
+      name: true,
+      email: true,
+      avatar: true,
+    },
+  });
+
   await prisma.activityLog.create({
     data: {
       workspaceId,
       userId,
-      action: `Assigned task "${task.title}" to ${assignedUser.name} (${assignedUser.email})`,
+      action: `Assigned task "${task.title}" to ${assignedUser?.name} (${assignedUser?.email})`,
       entityType: "TASK",
       entityId: task.id,
     },
   });
 
-  //  Notification
   await createNotificationService({
     workspaceId,
     type: "TASK_ASSIGNED",
-    message: `You were assigned to task "${task.title}" `,
-    taskId: task.id,
+    message: `You were assigned to task "${task.title}" by user ${userId}`,
+    taskId,
     userIds: [assignedTo],
   });
 
   return updatedTask;
 };
-
 //getTasks
 export const getTasksService = async (
   userId: number,

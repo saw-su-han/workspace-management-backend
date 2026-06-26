@@ -101,17 +101,19 @@ export const inviteUserService = async (
   const invitationLink = `http://localhost:3000/api/invitations/accept/${token}`;
 
   //  Send email
-  await transporter.sendMail({
+
+  const info = await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: email,
     subject: "Workspace Invitation",
     html: `
-      <h2>Workspace Invitation</h2>
-      <p>You have been invited as <b>${role}</b></p>
-      <a href="${invitationLink}">Accept Invitation</a>
-    `,
+    <h2>Workspace Invitation</h2>
+    <p>You have been invited as <b>${role}</b></p>
+    <a href="${invitationLink}">Accept Invitation</a>
+  `,
   });
 
+  console.log(info);
   console.log("Invitation Link:", invitationLink);
 
   return invitation;

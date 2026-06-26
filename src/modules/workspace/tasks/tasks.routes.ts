@@ -14,11 +14,7 @@ import { validate } from "../../../middleware/vilidate.middleware";
 
 const router = express.Router();
 
-router.post(
-  "/workspaces/:workspaceId/tasks",
-  authMiddleware,
-  createTaskController,
-);
+router.post("/tasks", authMiddleware, createTaskController);
 
 router.patch(
   "/workspaces/:workspaceId/tasks/:taskId/assign",

@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import { prisma } from "../../../utils/prisma";
 
 interface CreateNotificationInput {
@@ -7,6 +8,14 @@ interface CreateNotificationInput {
   taskId?: number;
   userIds: number[];
 }
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 export const createNotificationService = async ({
   workspaceId,
@@ -24,7 +33,6 @@ export const createNotificationService = async ({
     },
   });
 
-  // attach users
   await prisma.userNotification.createMany({
     data: userIds.map((userId) => ({
       userId,
@@ -32,9 +40,32 @@ export const createNotificationService = async ({
     })),
   });
 
+  const users = await prisma.user.findMany({
+    where: {
+      id: { in: userIds },
+    },
+    select: {
+      email: true,
+      name: true,
+    },
+  });
+
+  await Promise.all(
+    users.map((user) =>
+      transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: `New Notification - ${type}`,
+        html: `
+          <h3>Hello ${user.name}</h3>
+          <p>${message}</p>
+        `,
+      }),
+    ),
+  );
+
   return notification;
 };
-
 export const getUserNotificationsService = async (
   workspaceId: number,
   userId: number,
