@@ -13,24 +13,24 @@ import { validate } from "../../../middleware/vilidate.middleware";
 
 const router = express.Router();
 
-router.post("/:workspaceId/projects", authMiddleware, createProjectController);
-router.get("/:workspaceId/projects", authMiddleware, getProjectController);
+router.post("/projects", authMiddleware, createProjectController);
+router.get(
+  "/workspaces/:workspaceId/projects",
+  authMiddleware,
+  getProjectController,
+);
 
 router.get(
-  "/:workspaceId/projects/:projectId",
+  "/workspaces/:workspaceId/projects/:projectId",
   authMiddleware,
   getProjectDetailsController,
 );
 router.post(
-  "/:workspaceId/projects/:projectId/members",
+  "/workspaces/:workspaceId/projects/:projectId/members",
   authMiddleware,
   assignProjectController,
 );
-router.patch(
-  "/:workspaceId/projects/:projectId",
-  authMiddleware,
-  updateProjectController,
-);
+router.patch("/projects/:projectId", authMiddleware, updateProjectController);
 router.delete(
   "/:workspaceId/projects/:projectId",
   authMiddleware,

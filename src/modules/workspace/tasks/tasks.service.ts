@@ -7,8 +7,8 @@ import { createNotificationService } from "../notifications/notification.service
 //createTasks
 export const createTaskService = async (
   userId: number,
-  workspaceId: number,
   data: {
+    workspaceId: number;
     projectId: number;
     title: string;
     description?: string;
@@ -16,6 +16,12 @@ export const createTaskService = async (
     dueDate?: string;
   },
 ) => {
+  const workspaceId = Number(data.workspaceId);
+
+  if (!workspaceId || isNaN(workspaceId)) {
+    throw new AppError("workspaceId is required", 400);
+  }
+
   const member = await prisma.workspaceMember.findUnique({
     where: {
       workspaceId_userId: {
@@ -48,18 +54,8 @@ export const createTaskService = async (
       status: "TODO",
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       projectId: project.id,
-      workspaceId,
+      workspaceId: data.workspaceId,
       assignedTo: null,
-    },
-  });
-
-  await prisma.activityLog.create({
-    data: {
-      workspaceId,
-      userId,
-      action: `Created task ${task.title}`,
-      entityType: "TASK",
-      entityId: task.id,
     },
   });
 
@@ -91,7 +87,7 @@ export const assignTaskService = async (
         userId: assignedTo,
       },
     },
-    include: {
+    select: {
       user: {
         select: {
           name: true,
@@ -296,9 +292,9 @@ export const getTaskDetailsService = async (
 
 export const updateTaskService = async (
   userId: number,
-  workspaceId: number,
   taskId: number,
   data: {
+    workspaceId: number;
     title?: string;
     description?: string;
     priority?: "LOW" | "MEDIUM" | "HIGH";
@@ -307,6 +303,11 @@ export const updateTaskService = async (
     assignedTo?: number;
   },
 ) => {
+  const workspaceId = Number(data.workspaceId);
+
+  if (!workspaceId || isNaN(workspaceId)) {
+    throw new AppError("workspaceId is required", 400);
+  }
   //  Check workspace member
   const member = await prisma.workspaceMember.findUnique({
     where: {
@@ -467,13 +468,18 @@ export const deleteTaskService = async (
     },
   });
 
-  if (!task) {
+  if (!task || task.isDeleted) {
     throw new AppError("Task not found in this workspace", 403);
   }
 
-  const deletedTask = await prisma.task.delete({
+  const deletedTask = await prisma.task.update({
     where: {
       id: taskId,
     },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
+    },
   });
+  return deletedTask;
 };

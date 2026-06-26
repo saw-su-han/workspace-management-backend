@@ -1,10 +1,22 @@
 import { success } from "zod";
 import {
+  createWorkspaceService,
   deleteWorkspaceService,
   getWorkSpaceDetailsService,
   updateWorkspaceDetailsService,
 } from "./workspace.service";
 
+export const createWorkspaceController = async (req: any, res: any) => {
+  const userId = req.user.userId;
+
+  const workspace = await createWorkspaceService(userId, req.body, req.file);
+
+  res.status(201).json({
+    success: true,
+    message: "Workspace created successfully",
+    data: workspace,
+  });
+};
 export const getWorkSpaceDetailsController = async (req: any, res: any) => {
   try {
     const workspaceId = Number(req.params.workspaceId);

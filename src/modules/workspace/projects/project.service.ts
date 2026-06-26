@@ -7,6 +7,7 @@ export const createProjectService = async (
   userId: number,
   workspaceId: number,
   data: {
+    workspaceId: number;
     name: string;
     description?: string;
     startDate?: Date;
@@ -33,7 +34,7 @@ export const createProjectService = async (
       description: data.description,
       startDate: data.startDate ? new Date(data.startDate) : null,
       endDate: data.endDate ? new Date(data.endDate) : null,
-      workspaceId,
+      workspaceId: data.workspaceId,
       createdById: userId,
     },
   });
@@ -250,6 +251,7 @@ export const updateProjectService = async (
   workspaceId: number,
   projectId: number,
   data: {
+    workspaceId?: number; // allow optional move
     name?: string;
     description?: string;
     status?: "PLANNING" | "ACTIVE" | "COMPLETED";
@@ -257,7 +259,6 @@ export const updateProjectService = async (
     endDate?: string;
   },
 ) => {
-  //check
   const member = await prisma.workspaceMember.findUnique({
     where: {
       workspaceId_userId: {
@@ -268,7 +269,7 @@ export const updateProjectService = async (
   });
 
   if (!member) {
-    throw new AppError("You are not a member of this workspace ");
+    throw new AppError("You are not a member of this workspace");
   }
 
   if (member.role === "MEMBER") {
@@ -278,18 +279,38 @@ export const updateProjectService = async (
   const project = await prisma.project.findUnique({
     where: {
       id: projectId,
-      workspaceId,
     },
   });
+
   if (!project) {
     throw new AppError("Project not found");
   }
 
-  const updateProject = await prisma.project.update({
+  if (data.workspaceId && data.workspaceId !== workspaceId) {
+    const targetMember = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: data.workspaceId,
+          userId,
+        },
+      },
+    });
+
+    if (!targetMember) {
+      throw new AppError("You are not a member of target workspace");
+    }
+
+    if (targetMember.role === "MEMBER") {
+      throw new AppError("You cannot move project to this workspace");
+    }
+  }
+
+  const updatedProject = await prisma.project.update({
     where: {
       id: projectId,
     },
     data: {
+      workspaceId: data.workspaceId ?? workspaceId,
       name: data.name,
       description: data.description,
       status: data.status,
@@ -298,9 +319,18 @@ export const updateProjectService = async (
     },
   });
 
-  return updateProject;
-};
+  await prisma.activityLog.create({
+    data: {
+      workspaceId: data.workspaceId ?? workspaceId,
+      userId,
+      action: `Updated project ${updatedProject.name}`,
+      entityType: "PROJECT",
+      entityId: updatedProject.id,
+    },
+  });
 
+  return updatedProject;
+};
 export const deleteProjectService = async (
   userId: number,
   workspaceId: number,
@@ -338,13 +368,17 @@ export const deleteProjectService = async (
     },
   });
 
-  if (!project) {
+  if (!project || project.isDeleted) {
     throw new Error("Project not found");
   }
 
-  await prisma.project.delete({
+  await prisma.project.update({
     where: {
       id: projectId,
+    },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
     },
   });
 

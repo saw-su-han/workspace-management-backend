@@ -5,8 +5,17 @@ import {
   getNotificationsController,
   markAsReadController,
 } from "./notification.controller";
+import { upload } from "../../../middleware/upload.middleware";
+import { createWorkspaceController } from "../workspace/workspace.controller";
 
 const router = express.Router();
+
+router.post(
+  "/create",
+  authMiddleware,
+  upload.single("logo"),
+  createWorkspaceController,
+);
 
 router.post(
   "/workspaces/:workspaceId/notifications",

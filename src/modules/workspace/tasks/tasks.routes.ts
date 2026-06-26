@@ -38,7 +38,7 @@ router.get(
 );
 
 router.patch(
-  "/workspaces/:workspaceId/tasks/:taskId",
+  "/tasks/:taskId",
   authMiddleware,
   validate(updateTaskSchema),
   updateTaskController,

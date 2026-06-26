@@ -98,6 +98,7 @@ model WorkspaceMember {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   isDeleted Boolean   @default(false)
+  deletedAt DateTime?
 
   joinedAt DateTime @default(now())
 
@@ -249,8 +250,10 @@ model UserNotification {
 
   isRead Boolean @default(false)
 
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+  notification Notification @relation(fields: [notificationId], references: [id])
+  isDeleted    Boolean      @default(false)
+  deletedAt    DateTime?
 
   createdAt DateTime @default(now())
 

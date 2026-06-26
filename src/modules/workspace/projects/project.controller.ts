@@ -1,5 +1,4 @@
 import { success } from "zod";
-import { updateProfileService } from "../../auth/auth.service";
 import {
   assignProjectService,
   createProjectService,
@@ -10,7 +9,7 @@ import {
 } from "./project.service";
 
 export const createProjectController = async (req: any, res: any) => {
-  const workspaceId = Number(req.params.workspaceId);
+  const workspaceId = req.user.workspaceId;
 
   if (isNaN(workspaceId)) {
     return res.status(400).json({
@@ -124,7 +123,7 @@ export const assignProjectController = async (req: any, res: any) => {
 
 export const updateProjectController = async (req: any, res: any) => {
   try {
-    const workspaceId = Number(req.params.workspaceId);
+    const workspaceId = req.body.workspaceId;
     const projectId = Number(req.params.projectId);
     const userId = req.user.userId;
 

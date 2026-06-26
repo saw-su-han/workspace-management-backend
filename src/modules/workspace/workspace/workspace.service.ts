@@ -1,7 +1,63 @@
-import { totalmem } from "node:os";
 import AppError from "../../../errors/AppError";
 import { prisma } from "../../../utils/prisma";
-import th from "zod/v4/locales/th.js";
+
+export const createWorkspaceService = async (
+  userId: number,
+  data: {
+    workspaceName: string;
+  },
+  logoFile?: Express.Multer.File,
+) => {
+  // Check user exists
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  // Check workspace name
+  const existingWorkspace = await prisma.workspace.findUnique({
+    where: {
+      name: data.workspaceName,
+    },
+  });
+
+  if (existingWorkspace) {
+    throw new AppError("Workspace name already exists", 409);
+  }
+
+  // Create workspace
+  const workspace = await prisma.workspace.create({
+    data: {
+      name: data.workspaceName,
+      logo: logoFile?.path ?? null,
+    },
+  });
+
+  // Make creator OWNER
+  await prisma.workspaceMember.create({
+    data: {
+      workspaceId: workspace.id,
+      userId: user.id,
+      role: "OWNER",
+    },
+  });
+
+  // Activity Log
+  await prisma.activityLog.create({
+    data: {
+      workspaceId: workspace.id,
+      userId,
+      action: `Created workspace ${workspace.name}`,
+      entityType: "WORKSPACE",
+      entityId: workspace.id,
+    },
+  });
+
+  return workspace;
+};
 
 export const getWorkSpaceDetailsService = async (
   workspaceId: number,

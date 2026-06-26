@@ -10,16 +10,14 @@ import {
 
 export const createTaskController = async (req: any, res: any) => {
   const userId = req.user.userId;
-  const workspaceId = Number(req.params.workspaceId);
 
-  const task = await createTaskService(userId, workspaceId, req.body);
+  const task = await createTaskService(userId, req.body);
 
   res.json({
     success: true,
     data: task,
   });
 };
-
 export const assignTaskController = async (req: any, res: any) => {
   const userId = req.user.userId;
   const workspaceId = Number(req.params.workspaceId);
@@ -94,17 +92,12 @@ export const getTaskDetailsController = async (req: any, res: any) => {
 
 export const updateTaskController = async (req: any, res: any) => {
   try {
-    const workspaceId = Number(req.params.workspaceId);
+    // const workspaceId = req.user.workspaceId;
     const taskId = Number(req.params.taskId);
 
     const data = req.body;
 
-    const result = await updateTaskService(
-      req.user.userId,
-      workspaceId,
-      taskId,
-      data,
-    );
+    const result = await updateTaskService(req.user.userId, taskId, data);
 
     return res.status(200).json({
       success: true,

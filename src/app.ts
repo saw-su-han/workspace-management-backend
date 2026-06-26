@@ -15,6 +15,7 @@ import workspaceRoutes from "./modules/workspace/workspace/workspace.routes";
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api/invitations", invitationRoutes);
 // app.use(
@@ -28,7 +29,7 @@ app.get("/", (req: Request, res: Response) => {
   res.json({ message: "API is running" });
 });
 app.use("/auth", authRoutes);
-app.use("/api/workspaces", projectRoutes);
+app.use("/api", projectRoutes);
 app.use("/api", tasksRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", commentRoutes);
