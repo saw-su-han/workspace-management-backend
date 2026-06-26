@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { prisma } from "../../../utils/prisma";
+import AppError from "../../../errors/AppError";
 
 interface CreateNotificationInput {
   workspaceId: number;
@@ -66,10 +67,24 @@ export const createNotificationService = async ({
 
   return notification;
 };
+
 export const getUserNotificationsService = async (
   workspaceId: number,
   userId: number,
 ) => {
+  const assigner = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId,
+      },
+    },
+  });
+
+  if (!assigner) {
+    throw new AppError("You are not a workspace member", 403);
+  }
+
   return prisma.userNotification.findMany({
     where: {
       userId,

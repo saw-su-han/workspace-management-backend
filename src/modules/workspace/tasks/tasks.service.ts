@@ -114,6 +114,19 @@ export const assignTaskService = async (
     throw new AppError("Admin can only assign tasks to members", 403);
   }
 
+  //update
+  const existAssignedTask = await prisma.task.findUnique({
+    where: {
+      id: taskId,
+    },
+  });
+  if (!existAssignedTask) {
+    throw new AppError("Task not found");
+  }
+
+  if (existAssignedTask.assignedTo === assignedTo) {
+    throw new AppError("User already assigned to this task");
+  }
   const updatedTask = await prisma.task.update({
     where: {
       id: taskId,
