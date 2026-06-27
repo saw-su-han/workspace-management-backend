@@ -5,6 +5,7 @@ import {
   deleteProjectService,
   getProjectDetailsService,
   getProjectService,
+  getProjectServiceQuery,
   updateProjectService,
 } from "./project.service";
 
@@ -43,13 +44,7 @@ export const getProjectController = async (req: any, res: any) => {
     }
 
     const userId = req.user.userId;
-    const { search, status } = req.query;
-    const project = await getProjectService(
-      userId,
-      workspaceId,
-      search,
-      status,
-    );
+    const project = await getProjectService(userId, workspaceId);
 
     return res.status(200).json({
       success: true,
@@ -63,6 +58,28 @@ export const getProjectController = async (req: any, res: any) => {
   }
 };
 
+//
+
+export const getProjectsQueryController = async (req: any, res: any) => {
+  const userId = req.user.userId;
+
+  const workspaceId = Number(req.query.workspaceId);
+  const projectId = Number(req.query.projectId);
+  const { search, status } = req.query;
+
+  const projects = await getProjectServiceQuery(
+    userId,
+    workspaceId,
+    projectId,
+    search,
+    status,
+  );
+
+  res.json({
+    success: true,
+    data: projects,
+  });
+};
 //
 
 export const getProjectDetailsController = async (req: any, res: any) => {

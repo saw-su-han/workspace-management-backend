@@ -3,6 +3,7 @@ import { AppError } from "../../../errors/AppError";
 import { prisma } from "../../../utils/prisma";
 import da from "zod/v4/locales/da.js";
 import { createNotificationService } from "../notifications/notification.service";
+import { memoryStorage } from "multer";
 
 //createTasks
 export const createTaskService = async (
@@ -166,7 +167,36 @@ export const assignTaskService = async (
   return updatedTask;
 };
 //getTasks
-export const getTasksService = async (
+
+export const getAllTasks = async (
+  userId: number,
+  workspaceId: number,
+  projectId?: number,
+) => {
+  const member = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId,
+      },
+    },
+  });
+  if (!member) {
+    throw new AppError("You are not a member of this workspace");
+  }
+
+  return await prisma.task.findMany({
+    where: {
+      workspaceId,
+      isDeleted: false,
+
+      ...(projectId && {
+        projectId,
+      }),
+    },
+  });
+};
+export const getTasksQueryService = async (
   userId: number,
   workspaceId: number,
   search?: string,
@@ -222,22 +252,6 @@ export const getTasksService = async (
       priority: true,
       status: true,
       dueDate: true,
-
-      assignee: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          avatar: true,
-        },
-      },
-
-      project: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
     },
   });
 };

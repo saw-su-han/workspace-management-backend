@@ -2,8 +2,9 @@ import {
   assignTaskService,
   createTaskService,
   deleteTaskService,
+  getAllTasks,
   getTaskDetailsService,
-  getTasksService,
+  getTasksQueryService,
   updateTaskService,
   updateTaskStatusService,
 } from "./tasks.service";
@@ -18,6 +19,7 @@ export const createTaskController = async (req: any, res: any) => {
     data: task,
   });
 };
+
 export const assignTaskController = async (req: any, res: any) => {
   const userId = req.user.userId;
   const workspaceId = Number(req.params.workspaceId);
@@ -31,9 +33,39 @@ export const assignTaskController = async (req: any, res: any) => {
     data: task,
   });
 };
+
 export const getTasksController = async (req: any, res: any) => {
   try {
+    const userId = req.user.userId;
+
     const workspaceId = Number(req.params.workspaceId);
+    const projectId = req.query.projectId
+      ? Number(req.query.projectId)
+      : undefined;
+
+    if (isNaN(workspaceId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid workspaceId",
+      });
+    }
+
+    const tasks = await getAllTasks(userId, workspaceId, projectId);
+
+    return res.status(200).json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const getTasksQueryController = async (req: any, res: any) => {
+  try {
+    const workspaceId = req.user.workspaceId;
 
     if (isNaN(workspaceId)) {
       return res.status(400).json({
@@ -47,7 +79,7 @@ export const getTasksController = async (req: any, res: any) => {
     // query
     const { search, status, assignedTo, projectId } = req.query;
 
-    const result = await getTasksService(
+    const result = await getTasksQueryService(
       userId,
       workspaceId,
       search,

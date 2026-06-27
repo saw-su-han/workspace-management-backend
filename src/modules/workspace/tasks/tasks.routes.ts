@@ -6,6 +6,7 @@ import {
   deleteTaskController,
   getTaskDetailsController,
   getTasksController,
+  getTasksQueryController,
   updateTaskController,
   updateTaskStatusController,
 } from "./tasks.controller";
@@ -27,6 +28,9 @@ router.get(
   authMiddleware,
   getTasksController,
 );
+
+router.get("/tasks", authMiddleware, getTasksQueryController);
+
 router.get(
   "/workspaces/:workspaceId/tasks/:taskId",
   authMiddleware,

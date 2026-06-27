@@ -56,6 +56,38 @@ export const createProjectService = async (
 export const getProjectService = async (
   userId: number,
   workspaceId: number,
+) => {
+  const member = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId,
+      },
+    },
+  });
+
+  if (!member) {
+    throw new Error("You are not a member of this workspace");
+  }
+
+  if (member.role === "MEMBER") {
+    throw new AppError("Members are not allowed to view this projects");
+  }
+
+  return await prisma.project.findMany({
+    where: {
+      workspaceId,
+      isDeleted: false,
+    },
+  });
+};
+
+//getProjectQuery
+
+export const getProjectServiceQuery = async (
+  userId: number,
+  workspaceId: number,
+  projectId?: number,
   search?: string,
   status?: "PLANNING" | "ACTIVE" | "COMPLETED",
 ) => {
@@ -77,16 +109,20 @@ export const getProjectService = async (
       workspaceId,
       isDeleted: false,
 
-      // SEARCH
-      name: search
-        ? {
-            contains: search,
-            mode: "insensitive",
-          }
-        : undefined,
+      ...(projectId && {
+        id: projectId,
+      }),
 
-      // STATUS FILTER
-      status: status ?? undefined,
+      ...(search && {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
+      }),
+
+      ...(status && {
+        status,
+      }),
 
       ...(member.role === "MEMBER"
         ? {
@@ -100,6 +136,7 @@ export const getProjectService = async (
     },
   });
 };
+
 //getProjectDetails
 export const getProjectDetailsService = async (
   userId: number,

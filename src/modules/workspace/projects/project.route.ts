@@ -5,6 +5,7 @@ import {
   deleteProjectController,
   getProjectController,
   getProjectDetailsController,
+  getProjectsQueryController,
   updateProjectController,
 } from "./project.controller";
 import { authMiddleware } from "../../../middleware/auth.middleware";
@@ -14,11 +15,8 @@ import { validate } from "../../../middleware/vilidate.middleware";
 const router = express.Router();
 
 router.post("/projects", authMiddleware, createProjectController);
-router.get(
-  "/workspaces/:workspaceId/projects",
-  authMiddleware,
-  getProjectController,
-);
+
+router.get("/workspaces/:workspaceId/", authMiddleware, getProjectController);
 
 router.get(
   "/workspaces/:workspaceId/projects/:projectId",
@@ -31,9 +29,12 @@ router.post(
   assignProjectController,
 );
 router.patch("/projects/:projectId", authMiddleware, updateProjectController);
+
 router.delete(
   "/:workspaceId/projects/:projectId",
   authMiddleware,
   deleteProjectController,
 );
+
+router.get("/projects", authMiddleware, getProjectsQueryController);
 export default router;
