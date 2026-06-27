@@ -3,10 +3,6 @@ import { transporter } from "../../../utils/mail";
 import { prisma } from "../../../utils/prisma";
 import { AppError } from "../../../errors/AppError";
 import { generateInvitationToken } from "../../../utils/invitationToken";
-import { info } from "console";
-import { id } from "zod/locales";
-import { email } from "zod";
-import { Role } from "../../../generated/prisma";
 
 export const inviteUserService = async (
   workspaceId: number,
