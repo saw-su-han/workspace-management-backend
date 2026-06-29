@@ -1,17 +1,20 @@
 import express from "express";
-import { getDashboardController } from "./dashboard.controller";
+import {
+  getDashboardController,
+  getDetailsDashboardController,
+} from "./dashboard.controller";
 import { authMiddleware } from "../../../middleware/auth.middleware";
-import { getMyDashboardController } from "./dashboard.service";
+import { asyncHandler } from "../../../errors/asyncHandler";
 const router = express.Router();
 router.get(
   "/workspaces/:workspaceId/dashboard",
   authMiddleware,
-  getDashboardController,
+  asyncHandler(getDashboardController),
 );
 
 router.get(
-  "/workspaces/:workspaceId/my-dashboard",
+  "/workspaces/:workspaceId/dashboard-details",
   authMiddleware,
-  getMyDashboardController,
+  getDetailsDashboardController,
 );
 export default router;

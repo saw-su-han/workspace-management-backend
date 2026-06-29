@@ -6,7 +6,6 @@ export const createCommentService = async (
   workspaceId: number,
   taskId: number,
   content: string,
-  isDeleted: boolean,
 ) => {
   const member = await prisma.workspaceMember.findUnique({
     where: {
@@ -30,7 +29,7 @@ export const createCommentService = async (
   });
 
   if (!task) {
-    throw new AppError("Task not found in this workspace", 403);
+    throw new AppError("Task not found in this workspace", 404);
   }
 
   const comment = await prisma.comment.create({
@@ -53,5 +52,6 @@ export const createCommentService = async (
       },
     },
   });
-  return content;
+
+  return comment;
 };

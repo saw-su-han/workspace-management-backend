@@ -168,34 +168,34 @@ export const assignTaskService = async (
 };
 //getTasks
 
-export const getAllTasks = async (
-  userId: number,
-  workspaceId: number,
-  projectId?: number,
-) => {
-  const member = await prisma.workspaceMember.findUnique({
-    where: {
-      workspaceId_userId: {
-        workspaceId,
-        userId,
-      },
-    },
-  });
-  if (!member) {
-    throw new AppError("You are not a member of this workspace");
-  }
+// export const getAllTasks = async (
+//   userId: number,
+//   workspaceId: number,
+//   projectId?: number,
+// ) => {
+//   const member = await prisma.workspaceMember.findUnique({
+//     where: {
+//       workspaceId_userId: {
+//         workspaceId,
+//         userId,
+//       },
+//     },
+//   });
+//   if (!member) {
+//     throw new AppError("You are not a member of this workspace");
+//   }
 
-  return await prisma.task.findMany({
-    where: {
-      workspaceId,
-      isDeleted: false,
+//   return await prisma.task.findMany({
+//     where: {
+//       workspaceId,
+//       isDeleted: false,
 
-      ...(projectId && {
-        projectId,
-      }),
-    },
-  });
-};
+//       ...(projectId && {
+//         projectId,
+//       }),
+//     },
+//   });
+// };
 export const getTasksQueryService = async (
   userId: number,
   workspaceId: number,

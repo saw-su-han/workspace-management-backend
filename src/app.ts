@@ -17,7 +17,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use("/api/invitations", invitationRoutes);
 // app.use(
 //   cors({
 //     origin: "http://localhost:5173",
@@ -29,6 +28,7 @@ app.get("/", (req: Request, res: Response) => {
   res.json({ message: "API is running" });
 });
 app.use("/auth", authRoutes);
+app.use("/api/invitations", invitationRoutes);
 app.use("/api", projectRoutes);
 app.use("/api", tasksRoutes);
 app.use("/api", dashboardRoutes);

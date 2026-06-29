@@ -77,7 +77,7 @@ export const inviteUserService = async (
   });
 
   if (!workSpaceExist) {
-    throw new AppError("Work space not exist");
+    throw new AppError("Workspace not exist");
   }
 
   //  Save invitation with token
@@ -168,6 +168,7 @@ export const acceptInvitationService = async (token: string) => {
   };
 };
 
+//for fix in monday to add query to get members
 export const getWorkSpaceMemberService = async (
   workspaceId: number,
   userId: number,
@@ -179,34 +180,32 @@ export const getWorkSpaceMemberService = async (
     },
   });
   if (!membership) {
-    throw new AppError("Not a workspace member", 403);
+    throw new AppError("You are not a workspace member of this workspace", 403);
   }
   if (membership.role != "OWNER" && membership.role != "ADMIN") {
     throw new AppError("Only Owner or Admin can view members", 403);
   }
 
-  const members = await prisma.user.findMany({
+  const members = await prisma.workspaceMember.findMany({
     where: {
-      memberships: {
-        some: {
-          workspaceId,
-        },
-      },
+      workspaceId,
     },
     select: {
-      name: true,
-      email: true,
-      memberships: {
+      role: true,
+      user: {
         select: {
-          role: true,
+          name: true,
+          email: true,
         },
       },
     },
   });
+
   return members.map((member) => ({
-    name: member.name,
-    email: member.email,
-    role: member.memberships[0]?.role,
+    workspaceId,
+    name: member.user.name,
+    email: member.user.email,
+    role: member.role,
     status: "ACTIVE",
   }));
 };

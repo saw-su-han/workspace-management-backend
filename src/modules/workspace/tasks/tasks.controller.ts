@@ -2,7 +2,7 @@ import {
   assignTaskService,
   createTaskService,
   deleteTaskService,
-  getAllTasks,
+  // getAllTasks,
   getTaskDetailsService,
   getTasksQueryService,
   updateTaskService,
@@ -34,35 +34,35 @@ export const assignTaskController = async (req: any, res: any) => {
   });
 };
 
-export const getTasksController = async (req: any, res: any) => {
-  try {
-    const userId = req.user.userId;
+// export const getTasksController = async (req: any, res: any) => {
+//   try {
+//     const userId = req.user.userId;
 
-    const workspaceId = Number(req.params.workspaceId);
-    const projectId = req.query.projectId
-      ? Number(req.query.projectId)
-      : undefined;
+//     const workspaceId = Number(req.params.workspaceId);
+//     const projectId = req.query.projectId
+//       ? Number(req.query.projectId)
+//       : undefined;
 
-    if (isNaN(workspaceId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid workspaceId",
-      });
-    }
+//     if (isNaN(workspaceId)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid workspaceId",
+//       });
+//     }
 
-    const tasks = await getAllTasks(userId, workspaceId, projectId);
+//     const tasks = await getAllTasks(userId, workspaceId, projectId);
 
-    return res.status(200).json({
-      success: true,
-      data: tasks,
-    });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       data: tasks,
+//     });
+//   } catch (error: any) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const getTasksQueryController = async (req: any, res: any) => {
   try {
     const workspaceId = req.user.workspaceId;

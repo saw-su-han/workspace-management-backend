@@ -1,6 +1,7 @@
 import express from "express";
 import { authMiddleware } from "../../../middleware/auth.middleware";
 import { getActivityLogsController } from "./activityLog.controller";
+import { asyncHandler } from "../../../errors/asyncHandler";
 
 const router = express.Router();
 
@@ -8,7 +9,7 @@ const router = express.Router();
 router.get(
   "/workspaces/:workspaceId/activity-logs",
   authMiddleware,
-  getActivityLogsController,
+  asyncHandler(getActivityLogsController),
 );
 
 export default router;

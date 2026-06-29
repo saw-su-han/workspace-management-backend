@@ -3,11 +3,8 @@ import { createCommentService } from "./comment.service";
 
 export const createCommentController = async (req: any, res: any) => {
   try {
-    const workspaceId = Number(req.params.workspaceId);
-    const taskId = Number(req.params.taskId);
+    const { workspaceId, taskId, content } = req.body;
     const userId = req.user.userId;
-
-    const { content } = req.body;
 
     const result = await createCommentService(
       userId,

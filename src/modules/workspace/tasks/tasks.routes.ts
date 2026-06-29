@@ -5,13 +5,14 @@ import {
   createTaskController,
   deleteTaskController,
   getTaskDetailsController,
-  getTasksController,
+  //getTasksController,
   getTasksQueryController,
   updateTaskController,
   updateTaskStatusController,
 } from "./tasks.controller";
 import { updateTaskSchema } from "./tasks.schema";
 import { validate } from "../../../middleware/vilidate.middleware";
+import { asyncHandler } from "../../../errors/asyncHandler";
 
 const router = express.Router();
 
@@ -20,39 +21,39 @@ router.post("/tasks", authMiddleware, createTaskController);
 router.patch(
   "/workspaces/:workspaceId/tasks/:taskId/assign",
   authMiddleware,
-  assignTaskController,
+  asyncHandler(assignTaskController),
 );
 
-router.get(
-  "/workspaces/:workspaceId/tasks",
-  authMiddleware,
-  getTasksController,
-);
+// router.get(
+//   "/workspaces/:workspaceId/tasks",
+//   authMiddleware,
+//   getTasksController,
+// );
 
-router.get("/tasks", authMiddleware, getTasksQueryController);
+router.get("/tasks", authMiddleware, asyncHandler(getTasksQueryController));
 
 router.get(
   "/workspaces/:workspaceId/tasks/:taskId",
   authMiddleware,
-  getTaskDetailsController,
+  asyncHandler(getTaskDetailsController),
 );
 
 router.patch(
   "/tasks/:taskId",
   authMiddleware,
   validate(updateTaskSchema),
-  updateTaskController,
+  asyncHandler(updateTaskController),
 );
 
 router.patch(
   "/workspaces/:workspaceId/tasks/:taskId/status",
   authMiddleware,
-  updateTaskStatusController,
+  asyncHandler(updateTaskStatusController),
 );
 
 router.delete(
   "/workspaces/:workspaceId/tasks/:taskId",
   authMiddleware,
-  deleteTaskController,
+  asyncHandler(deleteTaskController),
 );
 export default router;

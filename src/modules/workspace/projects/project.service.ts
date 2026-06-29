@@ -53,34 +53,34 @@ export const createProjectService = async (
   return project;
 };
 
-export const getProjectService = async (
-  userId: number,
-  workspaceId: number,
-) => {
-  const member = await prisma.workspaceMember.findUnique({
-    where: {
-      workspaceId_userId: {
-        workspaceId,
-        userId,
-      },
-    },
-  });
+// export const getProjectService = async (
+//   userId: number,
+//   workspaceId: number,
+// ) => {
+//   const member = await prisma.workspaceMember.findUnique({
+//     where: {
+//       workspaceId_userId: {
+//         workspaceId,
+//         userId,
+//       },
+//     },
+//   });
 
-  if (!member) {
-    throw new Error("You are not a member of this workspace");
-  }
+//   if (!member) {
+//     throw new Error("You are not a member of this workspace");
+//   }
 
-  if (member.role === "MEMBER") {
-    throw new AppError("Members are not allowed to view this projects");
-  }
+//   if (member.role === "MEMBER") {
+//     throw new AppError("Members are not allowed to view this projects");
+//   }
 
-  return await prisma.project.findMany({
-    where: {
-      workspaceId,
-      isDeleted: false,
-    },
-  });
-};
+//   return await prisma.project.findMany({
+//     where: {
+//       workspaceId,
+//       isDeleted: false,
+//     },
+//   });
+// };
 
 //getProjectQuery
 
@@ -230,7 +230,6 @@ export const assignProjectService = async (
     throw new Error("You are not a member of this workspace");
   }
 
-  // Only OWNER / ADMIN can assign
   if (requester.role === "MEMBER") {
     throw new Error("You are not authorized to assign members");
   }
@@ -251,7 +250,6 @@ export const assignProjectService = async (
   if (requester.role === "ADMIN" && assignee.role !== "MEMBER") {
     throw new AppError("Admin can only assign tasks to members", 403);
   }
-  // Check project belongs to workspace
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
@@ -263,7 +261,6 @@ export const assignProjectService = async (
     throw new Error("Project not found in this workspace");
   }
 
-  // Check target user belongs to same workspace
   const targetMember = await prisma.workspaceMember.findUnique({
     where: {
       workspaceId_userId: {
@@ -277,7 +274,6 @@ export const assignProjectService = async (
     throw new Error("User is not a member of this workspace");
   }
 
-  // Prevent duplicate assignment
   const existingAssignment = await prisma.projectMember.findUnique({
     where: {
       projectId_userId: {

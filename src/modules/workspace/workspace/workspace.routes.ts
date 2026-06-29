@@ -14,15 +14,23 @@ router.post(
   "/create",
   authMiddleware,
   upload.single("logo"),
-  createWorkspaceController,
+  asyncHandler(createWorkspaceController),
 );
-router.get("/:workspaceId", authMiddleware, getWorkSpaceDetailsController);
+router.get(
+  "/workspaces/:workspaceId",
+  authMiddleware,
+  asyncHandler(getWorkSpaceDetailsController),
+);
 router.patch(
-  "/:workspaceId",
+  "/workspaces/:workspaceId",
   authMiddleware,
   upload.single("logo"),
   asyncHandler(updateWorkspaceController),
 );
 
-router.delete("/:workspaceId", authMiddleware, deleteWorkspaceController);
+router.delete(
+  "/workspaces/:workspaceId",
+  authMiddleware,
+  asyncHandler(deleteWorkspaceController),
+);
 export default router;

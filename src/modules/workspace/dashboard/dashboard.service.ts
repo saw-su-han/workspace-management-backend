@@ -81,7 +81,11 @@ export const getDashboardService = async (
 export const getDashboardMemberService = async (
   userId: number,
   workspaceId: number,
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
 ) => {
+  // Check if user belongs to workspace
   const member = await prisma.workspaceMember.findUnique({
     where: {
       workspaceId_userId: {
@@ -90,76 +94,110 @@ export const getDashboardMemberService = async (
       },
     },
   });
+
   if (!member) {
     throw new AppError("You are not a member of this workspace", 403);
   }
 
-  const assignedProjects = await prisma.project.findMany({
-    where: {
-      workspaceId,
-      members: {
-        some: {
-          userId,
+  const skip = (page - 1) * limit;
+
+  const projectDetails = {
+    workspaceId,
+    members: {
+      some: {
+        userId,
+      },
+    },
+    ...(search && {
+      name: {
+        contains: search,
+        mode: "insensitive" as const,
+      },
+    }),
+  };
+
+  const taskDetails = {
+    workspaceId,
+    assignedTo: userId, // Change this to assignedToId if that's your schema
+    ...(search && {
+      title: {
+        contains: search,
+        mode: "insensitive" as const,
+      },
+    }),
+  };
+
+  const [
+    assignedProjects,
+    assignedTasks,
+    totalProjects,
+    totalTasks,
+    completedTasks,
+    pendingTasks,
+  ] = await Promise.all([
+    prisma.project.findMany({
+      where: projectDetails,
+      select: {
+        id: true,
+        name: true,
+        status: true,
+      },
+      skip,
+      take: limit,
+    }),
+
+    prisma.task.findMany({
+      where: taskDetails,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        priority: true,
+        dueDate: true,
+      },
+      skip,
+      take: limit,
+    }),
+
+    prisma.project.count({
+      where: projectDetails,
+    }),
+
+    prisma.task.count({
+      where: taskDetails,
+    }),
+
+    prisma.task.count({
+      where: {
+        workspaceId,
+        assignedTo: userId,
+        status: "DONE",
+      },
+    }),
+
+    prisma.task.count({
+      where: {
+        workspaceId,
+        assignedTo: userId,
+        status: {
+          not: "DONE",
         },
       },
-    },
-    select: {
-      id: true,
-      name: true,
-      status: true,
-    },
-  });
-  const assignedTasks = await prisma.task.findMany({
-    where: {
-      workspaceId,
-      assignedTo: userId,
-    },
-    select: {
-      id: true,
-      title: true,
-      status: true,
-      priority: true,
-      dueDate: true,
-    },
-  });
-  const completedTasks = await prisma.task.count({
-    where: {
-      workspaceId,
-      assignedTo: userId,
-      status: "DONE",
-    },
-  });
-  const pendingTasks = await prisma.task.count({
-    where: {
-      workspaceId,
-      assignedTo: userId,
-      status: {
-        not: "DONE",
-      },
-    },
-  });
+    }),
+  ]);
+  console.log(userId, workspaceId);
   return {
     assignedProjects,
     assignedTasks,
     completedTasks,
     pendingTasks,
+    pagination: {
+      page,
+      limit,
+      totalProjects,
+      totalTasks,
+      totalProjectPages: Math.ceil(totalProjects / limit),
+      totalTaskPages: Math.ceil(totalTasks / limit),
+    },
   };
-};
-export const getMyDashboardController = async (req: any, res: any) => {
-  try {
-    const workspaceId = Number(req.params.workspaceId);
-    const userId = req.user.userId;
-
-    const result = await getDashboardService(userId, workspaceId);
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };

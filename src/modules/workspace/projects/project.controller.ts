@@ -4,7 +4,7 @@ import {
   createProjectService,
   deleteProjectService,
   getProjectDetailsService,
-  getProjectService,
+  //getProjectService,
   getProjectServiceQuery,
   updateProjectService,
 } from "./project.service";
@@ -32,31 +32,31 @@ export const createProjectController = async (req: any, res: any) => {
 };
 
 //
-export const getProjectController = async (req: any, res: any) => {
-  try {
-    const workspaceId = Number(req.params.workspaceId);
+// export const getProjectController = async (req: any, res: any) => {
+//   try {
+//     const workspaceId = Number(req.params.workspaceId);
 
-    if (isNaN(workspaceId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid workspaceId",
-      });
-    }
+//     if (isNaN(workspaceId)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid workspaceId",
+//       });
+//     }
 
-    const userId = req.user.userId;
-    const project = await getProjectService(userId, workspaceId);
+//     const userId = req.user.userId;
+//     const project = await getProjectService(userId, workspaceId);
 
-    return res.status(200).json({
-      success: true,
-      data: project,
-    });
-  } catch (error: any) {
-    return res.status(error.statusCode || 400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       data: project,
+//     });
+//   } catch (error: any) {
+//     return res.status(error.statusCode || 400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 
 //
 
@@ -113,12 +113,8 @@ export const getProjectDetailsController = async (req: any, res: any) => {
 };
 export const assignProjectController = async (req: any, res: any) => {
   try {
-    const workspaceId = Number(req.params.workspaceId);
-    const projectId = Number(req.params.projectId);
-
-    const requesterId = req.user.userId; // logged-in user
-    const { userId } = req.body; // user to assign
-
+    const requesterId = req.user.userId;
+    const { workspaceId, projectId, userId } = req.body;
     const result = await assignProjectService(
       requesterId,
       workspaceId,

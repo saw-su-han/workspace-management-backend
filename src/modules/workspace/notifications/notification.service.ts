@@ -102,7 +102,7 @@ export const markAsReadService = async (
   notificationId: number,
   userId: number,
 ) => {
-  return prisma.userNotification.updateMany({
+  const result = await prisma.userNotification.updateMany({
     where: {
       notificationId,
       userId,
@@ -111,4 +111,10 @@ export const markAsReadService = async (
       isRead: true,
     },
   });
+
+  if (result.count === 0) {
+    throw new AppError("Notification not found");
+  }
+
+  return result;
 };
