@@ -12,7 +12,6 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
 enum Role {
   OWNER
   ADMIN
