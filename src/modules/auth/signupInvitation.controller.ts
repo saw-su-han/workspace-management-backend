@@ -1,26 +1,17 @@
 import { Request, Response } from "express";
-import { signupWithInvitation } from "./auth.service";
+import { signupWithInvitation } from "./auth.service.js";
 
-export const signupInvitationController = async (
-  req: Request,
-  res: Response,
-) => {
+export const signupInvitationController = async (req: any, res: any) => {
   try {
-    const token = req.params.token;
-
     const result = await signupWithInvitation(
-      {
-        token,
-        ...req.body,
-      },
-      req.files as any,
+      { ...req.body, token: req.params.token },
+      req.files
     );
-
-    return res.json(result);
-  } catch (error: any) {
-    return res.status(500).json({
+    return res.status(201).json(result);
+  } catch (err: any) {
+    return res.status(err.statusCode || 500).json({
       success: false,
-      message: error.message || "Something went wrong",
+      message: err.message,
     });
   }
 };

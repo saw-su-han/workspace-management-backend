@@ -2,8 +2,8 @@ import { safeParse } from "zod";
 import {
   getDashboardMemberService,
   getDashboardService,
-} from "./dashboard.service";
-import AppError from "../../../errors/AppError";
+} from "./dashboard.service.js";
+import AppError from "../../../errors/AppError.js";
 
 export const getDashboardController = async (req: any, res: any) => {
   try {

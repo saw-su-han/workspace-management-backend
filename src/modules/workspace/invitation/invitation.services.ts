@@ -1,8 +1,9 @@
-import { InvitePayload } from "./invitation.types";
-import { transporter } from "../../../utils/mail";
-import { prisma } from "../../../utils/prisma";
-import { AppError } from "../../../errors/AppError";
-import { generateInvitationToken } from "../../../utils/invitationToken";
+import { InvitePayload } from "./invitation.types.js";
+import { transporter } from "../../../utils/mail.js";
+import { prisma } from "../../../utils/prisma.js";
+import { AppError } from "../../../errors/AppError.js";
+import { generateInvitationToken } from "../../../utils/invitationToken.js";
+import { CLIENT_URL } from "../../../config/env-var.js";
 
 export const inviteUserService = async (
   workspaceId: number,
@@ -94,8 +95,9 @@ export const inviteUserService = async (
   });
 
   //  Build link
-  const invitationLink = `http://localhost:3000/api/invitations/accept/${token}`;
+  const invitationLink = `${CLIENT_URL}/accept-invitation/${token}`;
 
+  console.log(` ************************ invigation link is : ${invitationLink}`)
   //  Send email
 
   const info = await transporter.sendMail({
@@ -191,6 +193,7 @@ export const getWorkSpaceMemberService = async (
       workspaceId,
     },
     select: {
+      userId: true,
       role: true,
       user: {
         select: {
@@ -203,6 +206,7 @@ export const getWorkSpaceMemberService = async (
 
   return members.map((member) => ({
     workspaceId,
+    userId: member.userId,
     name: member.user.name,
     email: member.user.email,
     role: member.role,
@@ -214,9 +218,8 @@ export const updateMemberRoleService = async (
   workspaceId: number,
   ownerId: number,
   targetId: number,
-  newRole: "ADMIN" | "MEMBER" | "OWNER",
+  newRole: "ADMIN" | "MEMBER",
 ) => {
-  //check
   const ownerMembership = await prisma.workspaceMember.findFirst({
     where: {
       workspaceId,
@@ -224,16 +227,12 @@ export const updateMemberRoleService = async (
     },
   });
 
-  if (!ownerMembership || ownerMembership.role != "OWNER") {
-    throw new AppError("Only owner can update member role", 403);
+  if (!ownerMembership || (ownerMembership.role !== "OWNER" && ownerMembership.role !== "ADMIN")) {
+    throw new AppError("Only owner or admin can update member roles", 403);
   }
 
   if (ownerId === targetId) {
-    throw new AppError("Owner cannot change own role");
-  }
-
-  if (newRole === "OWNER") {
-    throw new AppError("Cannot assign Owner role");
+    throw new AppError("You cannot change your own role", 400);
   }
 
   const targetMembership = await prisma.workspaceMember.findUnique({
@@ -244,19 +243,22 @@ export const updateMemberRoleService = async (
       },
     },
   });
-  console.log({
-    workspaceId,
-    ownerId,
-    targetId,
-    newRole,
-  });
 
   if (!targetMembership) {
     throw new AppError("User is not a member of this workspace", 404);
   }
 
+  if (targetMembership.role === "OWNER") {
+    throw new AppError("Cannot change the owner's role", 403);
+  }
+
+  // Admins cannot change another admin's role — only the owner can
+  if (ownerMembership.role === "ADMIN" && targetMembership.role === "ADMIN") {
+    throw new AppError("Admins cannot change another admin's role", 403);
+  }
+
   if (newRole === targetMembership.role) {
-    throw new AppError("Cannot change role to same role");
+    throw new AppError("Cannot change role to same role", 400);
   }
 
   await prisma.workspaceMember.update({

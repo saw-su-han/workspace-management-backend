@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import {
   AccessTokenPayload,
   RefreshTokenPayload,
-} from "../modules/auth/auth.types";
+} from "../modules/auth/auth.types.js";
 
 export const generateToken = (payload: AccessTokenPayload) => {
   return jwt.sign(payload, process.env.JWT_SECRET!, {

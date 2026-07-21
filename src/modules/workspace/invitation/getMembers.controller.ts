@@ -1,5 +1,5 @@
 import { success } from "zod";
-import { getWorkSpaceMemberService } from "./invitation.services";
+import { getWorkSpaceMemberService } from "./invitation.services.js";
 import { Request, Response } from "express";
 export const getWorkspaceMembersController = async (req: any, res: any) => {
   const userId = req.user.userId;

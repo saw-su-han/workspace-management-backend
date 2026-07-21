@@ -1,4 +1,4 @@
-import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 
 export const authMiddleware = (req: any, res: any, next: any) => {
   try {
@@ -18,14 +18,14 @@ export const authMiddleware = (req: any, res: any, next: any) => {
   } catch (err: any) {
     console.log("JWT ERROR:", err.message);
 
-    if (err instanceof TokenExpiredError) {
+    if (err instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         success: false,
         message: "Token expired, please login again",
       });
     }
 
-    if (err instanceof JsonWebTokenError) {
+    if (err instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
         success: false,
         message: "Invalid token, you provided wrong token",
@@ -56,14 +56,14 @@ export const getProfileMiddleware = (req: any, res: any, next: any) => {
   } catch (err: any) {
     console.log("JWT ERROR:", err.message);
 
-    if (err instanceof TokenExpiredError) {
+    if (err instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         success: false,
         message: "Token expired, please login again",
       });
     }
 
-    if (err instanceof JsonWebTokenError) {
+    if (err instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
         success: false,
         message: "Invalid token, you provided wrong token",

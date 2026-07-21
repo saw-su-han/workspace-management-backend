@@ -1,4 +1,4 @@
-import { updateMemberRoleService } from "./invitation.services";
+import { updateMemberRoleService } from "./invitation.services.js";
 import { Request, Response } from "express";
 export const updateMemberRoleController = async (req: any, res: Response) => {
   const workspaceId = req.user.workspaceId;

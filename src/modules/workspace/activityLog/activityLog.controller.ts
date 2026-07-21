@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getActivityLogsService } from "./activityLog.service";
+import { getActivityLogsService } from "./activityLog.service.js";
 
 export const getActivityLogsController = async (
   req: any,

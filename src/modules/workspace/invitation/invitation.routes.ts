@@ -1,15 +1,15 @@
 import express from "express";
-import { inviteUserController } from "./invitaiton.controller";
-import { authMiddleware } from "../../../middleware/auth.middleware";
-import { acceptInvitationController } from "./acceptInvitation.controller";
-import { asyncHandler } from "../../../errors/asyncHandler";
-import { upload } from "../../../middleware/upload.middleware";
-import { signupInvitationController } from "../../auth/signupInvitation.controller";
-import { getWorkSpaceMemberService } from "./invitation.services";
-import { getWorkspaceMembersController } from "./getMembers.controller";
-import { updateMemberRoleController } from "./updateMemberRole.controller";
+import { inviteUserController } from "./invitaiton.controller.js";
+import { authMiddleware } from "../../../middleware/auth.middleware.js";
+import { acceptInvitationController } from "./acceptInvitation.controller.js";
+import { asyncHandler } from "../../../errors/asyncHandler.js";
+import { upload } from "../../../middleware/upload.middleware.js";
+import { signupInvitationController } from "../../auth/signupInvitation.controller.js";
+import { getWorkSpaceMemberService } from "./invitation.services.js";
+import { getWorkspaceMembersController } from "./getMembers.controller.js";
+import { updateMemberRoleController } from "./updateMemberRole.controller.js";
 import ro from "zod/v4/locales/ro.js";
-import { removeMemberController } from "./removeMember.controller";
+import { removeMemberController } from "./removeMember.controller.js";
 
 const router = express.Router();
 

@@ -7,7 +7,7 @@ import {
   getTasksQueryService,
   updateTaskService,
   updateTaskStatusService,
-} from "./tasks.service";
+} from "./tasks.service.js";
 
 export const createTaskController = async (req: any, res: any) => {
   const userId = req.user.userId;

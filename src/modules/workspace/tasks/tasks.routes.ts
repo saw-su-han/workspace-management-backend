@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../../../middleware/auth.middleware";
+import { authMiddleware } from "../../../middleware/auth.middleware.js";
 import {
   assignTaskController,
   createTaskController,
@@ -9,10 +9,10 @@ import {
   getTasksQueryController,
   updateTaskController,
   updateTaskStatusController,
-} from "./tasks.controller";
-import { updateTaskSchema } from "./tasks.schema";
-import { validate } from "../../../middleware/vilidate.middleware";
-import { asyncHandler } from "../../../errors/asyncHandler";
+} from "./tasks.controller.js";
+import { updateTaskSchema } from "./tasks.schema.js";
+import { validate } from "../../../middleware/vilidate.middleware.js";
+import { asyncHandler } from "../../../errors/asyncHandler.js";
 
 const router = express.Router();
 

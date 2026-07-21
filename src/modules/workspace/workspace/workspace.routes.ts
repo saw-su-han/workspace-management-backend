@@ -1,13 +1,14 @@
 import express from "express";
-import { authMiddleware } from "../../../middleware/auth.middleware";
+import { authMiddleware } from "../../../middleware/auth.middleware.js";
 import {
   createWorkspaceController,
   deleteWorkspaceController,
   getWorkSpaceDetailsController,
+  getWorkspaceInfoController,
   updateWorkspaceController,
-} from "./workspace.controller";
-import { upload } from "../../../middleware/upload.middleware";
-import { asyncHandler } from "../../../errors/asyncHandler";
+} from "./workspace.controller.js";
+import { upload } from "../../../middleware/upload.middleware.js";
+import { asyncHandler } from "../../../errors/asyncHandler.js";
 
 const router = express.Router();
 router.post(
@@ -33,4 +34,6 @@ router.delete(
   authMiddleware,
   asyncHandler(deleteWorkspaceController),
 );
+
+router.get("/workspaces/:workspaceId/info", authMiddleware, getWorkspaceInfoController);
 export default router;

@@ -1,8 +1,8 @@
 import { th } from "zod/locales";
-import { AppError } from "../../../errors/AppError";
-import { prisma } from "../../../utils/prisma";
+import { AppError } from "../../../errors/AppError.js";
+import { prisma } from "../../../utils/prisma.js";
 import da from "zod/v4/locales/da.js";
-import { createNotificationService } from "../notifications/notification.service";
+import { createNotificationService } from "../notifications/notification.service.js";
 import { memoryStorage } from "multer";
 
 //createTasks
@@ -224,9 +224,9 @@ export const getTasksQueryService = async (
 
     title: search
       ? {
-          contains: search,
-          mode: "insensitive",
-        }
+        contains: search,
+        mode: "insensitive",
+      }
       : undefined,
 
     status: status ?? undefined,

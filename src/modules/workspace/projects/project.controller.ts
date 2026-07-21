@@ -7,7 +7,7 @@ import {
   //getProjectService,
   getProjectServiceQuery,
   updateProjectService,
-} from "./project.service";
+} from "./project.service.js";
 
 export const createProjectController = async (req: any, res: any) => {
   const workspaceId = req.user.workspaceId;
@@ -82,35 +82,65 @@ export const getProjectsQueryController = async (req: any, res: any) => {
 };
 //
 
-export const getProjectDetailsController = async (req: any, res: any) => {
+// Example Express Controller
+// backend: src/modules/workspace/projects/project.controller.ts (or route handler)
+
+export const getProjectDetailsHandler = async (req: any, res: any) => {
   try {
     const workspaceId = Number(req.params.workspaceId);
     const projectId = Number(req.params.projectId);
 
-    if (isNaN(workspaceId) || isNaN(projectId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid IDs",
-      });
+    // 1. Get userId from auth middleware (check your JWT payload structure)
+    const userId = Number(req.user?.id || req.user?.userId);
+
+    // 2. Safeguard: throw an explicit error if user is not authenticated/valid
+    if (!userId || isNaN(userId)) {
+      return res.status(401).json({ message: "Unauthorized: User ID is required" });
     }
 
-    const project = await getProjectDetailsService(
-      req.user.userId,
-      workspaceId,
-      projectId,
-    );
+    if (isNaN(workspaceId) || isNaN(projectId)) {
+      return res.status(400).json({ message: "Invalid workspace or project ID" });
+    }
+
+    // 3. Call service with valid numbers: (userId, workspaceId, projectId)
+    const project = await getProjectDetailsService(userId, workspaceId, projectId);
 
     return res.status(200).json({
       success: true,
       data: project,
     });
   } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return res.status(400).json({ message: error.message });
   }
-};
+};// export const getProjectDetailsController = async (req: any, res: any) => {
+//   try {
+//     const workspaceId = Number(req.params.workspaceId);
+//     const projectId = Number(req.params.projectId);
+
+//     if (isNaN(workspaceId) || isNaN(projectId)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid IDs",
+//       });
+//     }
+
+//     const project = await getProjectDetailsService(
+//       req.user.userId,
+//       workspaceId,
+//       projectId,
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       data: project,
+//     });
+//   } catch (error: any) {
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const assignProjectController = async (req: any, res: any) => {
   try {
     const requesterId = req.user.userId;

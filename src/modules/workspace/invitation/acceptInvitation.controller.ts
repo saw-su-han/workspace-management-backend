@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { acceptInvitationService } from "./invitation.services";
+import { acceptInvitationService } from "./invitation.services.js";
 
 export const acceptInvitationController = async (req: any, res: Response) => {
   try {

@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
-import { prisma } from "../../../utils/prisma";
-import AppError from "../../../errors/AppError";
+import { prisma } from "../../../utils/prisma.js";
+import AppError from "../../../errors/AppError.js";
 
 interface CreateNotificationInput {
   workspaceId: number;

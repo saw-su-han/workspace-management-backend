@@ -1,4 +1,4 @@
-import { inviteUserService } from "./invitation.services";
+import { inviteUserService } from "./invitation.services.js";
 
 export const inviteUserController = async (req: any, res: any) => {
   try {

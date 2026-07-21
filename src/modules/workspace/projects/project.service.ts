@@ -1,6 +1,6 @@
 import { number, string } from "zod";
-import { prisma } from "../../../utils/prisma";
-import { AppError } from "../../../errors/AppError";
+import { prisma } from "../../../utils/prisma.js";
+import { AppError } from "../../../errors/AppError.js";
 import da from "zod/v4/locales/da.js";
 
 export const createProjectService = async (
@@ -126,12 +126,12 @@ export const getProjectServiceQuery = async (
 
       ...(member.role === "MEMBER"
         ? {
-            members: {
-              some: {
-                userId,
-              },
+          members: {
+            some: {
+              userId,
             },
-          }
+          },
+        }
         : {}),
     },
   });

@@ -1,16 +1,16 @@
-import bcrypt from "bcrypt";
-import { prisma } from "../../utils/prisma";
-import { loginInput, registerInput } from "./auth.schema";
-import { generateRefreshToken, generateToken } from "../../utils/jwt.utility";
-import { AppError } from "../../errors/AppError";
-import { RegisterFiles } from "./auth.types";
+import bcrypt from "bcryptjs";
+import { prisma } from "../../utils/prisma.js";
+import { loginInput, registerInput } from "./auth.schema.js";
+import { generateRefreshToken, generateToken } from "../../utils/jwt.utility.js";
+import { AppError } from "../../errors/AppError.js";
+import { RegisterFiles } from "./auth.types.js";
 import jwt from "jsonwebtoken";
 
 export const register = async (data: registerInput, files: RegisterFiles) => {
   const { workspaceName, email, name, password } = data;
 
-  const logoFile = files?.logo?.[0];
-  const avatarFile = files?.avatar?.[0];
+  const logoFile = files && files.logo ? files.logo[0] : null;
+  const avatarFile = files && files.avatar ? files.avatar[0] : null;
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -146,7 +146,7 @@ export const logoutService = async (userId: number) => {
   });
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError("User not found", 404);
   }
 
   await prisma.user.update({
@@ -211,7 +211,6 @@ export const refreshTokenService = async (refreshToken: string) => {
     },
   };
 };
-
 export const getProfileService = async (userId: number) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -219,64 +218,82 @@ export const getProfileService = async (userId: number) => {
       id: true,
       name: true,
       email: true,
-      memberships: true,
+      avatar: true, // ⚡ Fixed: Use your schema's native 'avatar' field instead of avatarUrl
+      memberships: {
+        where: { isDeleted: false },
+        select: {
+          role: true,
+          workspace: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+              isDeleted: true,
+              _count: {
+                select: {
+                  members: { where: { isDeleted: false } },
+                  projects: { where: { isDeleted: false } },
+                  tasks: { where: { isDeleted: false } },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
-  if (!user || !user.memberships || user.memberships.length === 0) {
-    throw new AppError("User not found or no memberships", 404);
+  if (!user) {
+    throw new AppError("User not found", 404);
   }
 
-  const workspace = await prisma.workspace.findUnique({
-    where: {
-      id: user.memberships[0].workspaceId,
-    },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
+  const workspaces = user.memberships
+    .filter((m) => m.workspace && m.workspace.isDeleted !== true)
+    .map((m) => ({
+      id: m.workspace.id,
+      name: m.workspace.name,
+      logo: m.workspace.logo,
+      role: m.role,
+      isDeleted: m.workspace.isDeleted,
+      totalMembers: m.workspace._count.members,
+      totalProjects: m.workspace._count.projects,
+      totalTasks: m.workspace._count.tasks,
+    }));
 
-  if (!workspace) {
-    throw new AppError("Workspace not found", 404);
-  }
-
-  return { success: true, data: { user, workspace } };
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar, // ⚡ Directly available for your frontend UserAvatar components
+    workspaces,
+  };
 };
 
 export const updateProfileService = async (
   userId: number,
-  workspaceId: number,
-  projectId: number,
-  data: { name?: string } = {},
-  files: RegisterFiles = {},
+  workspaceId: number | null,
+  projectId: number | null,
+  updateData: any,
+  files: any
 ) => {
-  const avatarFile = files.avatar?.[0];
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!user) {
-    throw new Error("User not found");
+  // 1. Process files using the key sent from the client
+  let uploadedAvatarPath = updateData.avatar;
+  if (files && files.avatar) {
+    uploadedAvatarPath = files.avatar[0].path;
   }
 
-  const updatedUser = await prisma.user.update({
+  // 2. Perform the database write update targeting 'avatar'
+  await prisma.user.update({
     where: { id: userId },
     data: {
-      name: data.name ?? user.name,
-      avatar: avatarFile?.path ?? user.avatar,
-    },
-    select: {
-      id: true,
-      name: true,
-      avatar: true,
+      name: updateData.name,
+      avatar: uploadedAvatarPath, // ⚡ Fixed alignment to database column definition
     },
   });
 
-  return updatedUser;
+  // 3. Reuse getProfileService so the returned structure matches perfectly!
+  return await getProfileService(userId);
 };
-
 export const signupWithInvitation = async (data: any, files: RegisterFiles) => {
   const { token, name, password } = data;
 
@@ -288,7 +305,6 @@ export const signupWithInvitation = async (data: any, files: RegisterFiles) => {
     throw new AppError("Invalid invitation token", 404);
   }
 
-  // check or create user
   let user = await prisma.user.findUnique({
     where: { email: invitation.email },
   });
@@ -301,11 +317,11 @@ export const signupWithInvitation = async (data: any, files: RegisterFiles) => {
         email: invitation.email,
         name,
         password: hashedPassword,
-        avatar: files?.avatar?.[0]?.path ?? null,
+        avatar: files && files.avatar && files.avatar[0] ? files.avatar[0].path : null,
       },
     });
   } else {
-    if (files?.avatar?.[0]?.path) {
+    if (files && files.avatar && files.avatar[0]) {
       await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -319,17 +335,15 @@ export const signupWithInvitation = async (data: any, files: RegisterFiles) => {
     data: {
       workspaceId: invitation.workspaceId,
       userId: user.id,
-      role: invitation.role, // MEMBER / ADMIN
+      role: invitation.role,
     },
   });
 
-  // mark invitation accepted
   await prisma.invitation.update({
     where: { token },
     data: { status: "ACCEPTED" },
   });
 
-  // generate token
   const authToken = generateToken({
     userId: user.id,
     workspaceId: invitation.workspaceId,

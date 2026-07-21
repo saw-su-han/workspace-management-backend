@@ -1,5 +1,5 @@
-import { AppError } from "../../../errors/AppError";
-import { prisma } from "../../../utils/prisma";
+import { AppError } from "../../../errors/AppError.js";
+import { prisma } from "../../../utils/prisma.js";
 
 export const removeMemberService = async (
   workspaceId: number,

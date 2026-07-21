@@ -3,7 +3,7 @@ import {
   createNotificationService,
   getUserNotificationsService,
   markAsReadService,
-} from "./notification.service";
+} from "./notification.service.js";
 
 export const createNotificationController = async (req: any, res: Response) => {
   try {

@@ -2,9 +2,9 @@ import express from "express";
 import {
   getDashboardController,
   getDetailsDashboardController,
-} from "./dashboard.controller";
-import { authMiddleware } from "../../../middleware/auth.middleware";
-import { asyncHandler } from "../../../errors/asyncHandler";
+} from "./dashboard.controller.js";
+import { authMiddleware } from "../../../middleware/auth.middleware.js";
+import { asyncHandler } from "../../../errors/asyncHandler.js";
 const router = express.Router();
 router.get(
   "/workspaces/:workspaceId/dashboard",

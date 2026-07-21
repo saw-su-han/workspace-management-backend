@@ -4,14 +4,14 @@ import {
   createProjectController,
   deleteProjectController,
   //getProjectController,
-  getProjectDetailsController,
+  getProjectDetailsHandler,
   getProjectsQueryController,
   updateProjectController,
-} from "./project.controller";
-import { authMiddleware } from "../../../middleware/auth.middleware";
-import { createProjectSchema } from "./createproject.schema";
-import { validate } from "../../../middleware/vilidate.middleware";
-import { asyncHandler } from "../../../errors/asyncHandler";
+} from "./project.controller.js";
+import { authMiddleware } from "../../../middleware/auth.middleware.js";
+import { createProjectSchema } from "./createproject.schema.js";
+import { validate } from "../../../middleware/vilidate.middleware.js";
+import { asyncHandler } from "../../../errors/asyncHandler.js";
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.post("/projects", authMiddleware, createProjectController);
 router.get(
   "/workspaces/:workspaceId/projects/:projectId",
   authMiddleware,
-  asyncHandler(getProjectDetailsController),
+  asyncHandler(getProjectDetailsHandler),
 );
 router.post("/members", authMiddleware, asyncHandler(assignProjectController));
 router.patch(

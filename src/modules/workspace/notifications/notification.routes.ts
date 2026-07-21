@@ -1,13 +1,13 @@
 import express from "express";
-import { authMiddleware } from "../../../middleware/auth.middleware";
+import { authMiddleware } from "../../../middleware/auth.middleware.js";
 import {
   createNotificationController,
   getNotificationsController,
   markAsReadController,
-} from "./notification.controller";
-import { upload } from "../../../middleware/upload.middleware";
-import { createWorkspaceController } from "../workspace/workspace.controller";
-import { asyncHandler } from "../../../errors/asyncHandler";
+} from "./notification.controller.js";
+import { upload } from "../../../middleware/upload.middleware.js";
+import { createWorkspaceController } from "../workspace/workspace.controller.js";
+import { asyncHandler } from "../../../errors/asyncHandler.js";
 
 const router = express.Router();
 
