@@ -10,9 +10,9 @@ import {
 } from "./project.service.js";
 
 export const createProjectController = async (req: any, res: any) => {
-  const workspaceId = req.user.workspaceId;
+  const workspaceId = Number(req.body.workspaceId);
 
-  if (isNaN(workspaceId)) {
+  if (!workspaceId || isNaN(workspaceId)) {
     return res.status(400).json({
       success: false,
       message: "Invalid workspaceId",
@@ -30,7 +30,6 @@ export const createProjectController = async (req: any, res: any) => {
     data: project,
   });
 };
-
 //
 // export const getProjectController = async (req: any, res: any) => {
 //   try {

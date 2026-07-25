@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { prisma } from "../../../utils/prisma.js";
 import AppError from "../../../errors/AppError.js";
-
+import { transporter } from "../../../utils/mail.js";
 interface CreateNotificationInput {
   workspaceId: number;
   type: string;
@@ -10,13 +10,7 @@ interface CreateNotificationInput {
   userIds: number[];
 }
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+
 
 export const createNotificationService = async ({
   workspaceId,

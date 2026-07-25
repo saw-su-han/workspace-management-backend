@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
 import app from "./app.js";
 
 const PORT = process.env.PORT || 3000;
@@ -7,6 +11,7 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+
 app.listen(Number(PORT), "0.0.0.0", () => {
-  // console.log(`Server running on http://0.0.0.0:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

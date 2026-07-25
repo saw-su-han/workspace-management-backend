@@ -185,7 +185,21 @@ export const getProjectDetailsService = async (
           },
         },
       },
-      tasks: true,
+      tasks: {
+        where: {
+          isDeleted: false,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          priority: true,
+          dueDate: true,
+          createdAt: true,
+          assignedTo: true,
+        },
+      },
     },
   });
   if (!project) {

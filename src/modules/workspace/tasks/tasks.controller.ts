@@ -65,12 +65,13 @@ export const assignTaskController = async (req: any, res: any) => {
 // };
 export const getTasksQueryController = async (req: any, res: any) => {
   try {
-    const workspaceId = req.user.workspaceId;
 
-    if (isNaN(workspaceId)) {
+    const workspaceId = Number(req.query.workspaceId);
+
+    if (!workspaceId || isNaN(workspaceId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid workspaceId",
+        message: "workspaceId is required",
       });
     }
 
@@ -98,8 +99,7 @@ export const getTasksQueryController = async (req: any, res: any) => {
       message: error.message,
     });
   }
-};
-export const getTaskDetailsController = async (req: any, res: any) => {
+}; export const getTaskDetailsController = async (req: any, res: any) => {
   try {
     const workspaceId = Number(req.params.workspaceId);
     const taskId = Number(req.params.taskId);

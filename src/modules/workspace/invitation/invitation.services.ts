@@ -43,12 +43,6 @@ export const inviteUserService = async (
     throw new AppError("Admin can only invite members", 403);
   }
 
-  // if (inviterMembership.role === "OWNER") {
-  //   throw new AppError(
-  //     "Owner role cannot be assigned or invited through invitation",
-  //     403,
-  //   );
-  // }
   const existingInvitation = await prisma.invitation.findFirst({
     where: {
       workspaceId,
@@ -68,7 +62,6 @@ export const inviteUserService = async (
     where: { email },
   });
 
-  //  Generate token FIRST
   const token = generateInvitationToken(email);
 
   const workSpaceExist = await prisma.workspace.findFirst({
@@ -97,7 +90,6 @@ export const inviteUserService = async (
   //  Build link
   const invitationLink = `${CLIENT_URL}/accept-invitation/${token}`;
 
-  console.log(` ************************ invigation link is : ${invitationLink}`)
   //  Send email
 
   const info = await transporter.sendMail({
@@ -184,9 +176,9 @@ export const getWorkSpaceMemberService = async (
   if (!membership) {
     throw new AppError("You are not a workspace member of this workspace", 403);
   }
-  if (membership.role != "OWNER" && membership.role != "ADMIN") {
-    throw new AppError("Only Owner or Admin can view members", 403);
-  }
+  // if (membership.role != "OWNER" && membership.role != "ADMIN") {
+  //   throw new AppError("Only Owner or Admin can view members", 403);
+  // }
 
   const members = await prisma.workspaceMember.findMany({
     where: {
