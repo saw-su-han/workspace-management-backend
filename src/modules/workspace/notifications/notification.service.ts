@@ -112,3 +112,68 @@ export const markAsReadService = async (
 
   return result;
 };
+
+
+
+export const markAllAsReadService = async (
+  workspaceId: number,
+  userId: number,
+) => {
+  const member = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId,
+      },
+    },
+  });
+
+  if (!member) {
+    throw new AppError("You are not a workspace member", 403);
+  }
+
+  const result = await prisma.userNotification.updateMany({
+    where: {
+      userId,
+      isRead: false,
+      isDeleted: false,
+      notification: {
+        workspaceId,
+      },
+    },
+    data: {
+      isRead: true,
+    },
+  });
+
+  return result;
+};
+
+export const clearAllNotificationsService = async (
+  workspaceId: number,
+  userId: number,
+) => {
+  const member = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId,
+      },
+    },
+  });
+
+  if (!member) {
+    throw new AppError("You are not a workspace member", 403);
+  }
+
+  const result = await prisma.userNotification.deleteMany({
+    where: {
+      userId,
+      notification: {
+        workspaceId,
+      },
+    },
+  });
+
+  return result;
+};

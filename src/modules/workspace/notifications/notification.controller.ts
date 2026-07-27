@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import {
+  clearAllNotificationsService,
   createNotificationService,
   getUserNotificationsService,
+  markAllAsReadService,
   markAsReadService,
 } from "./notification.service.js";
 
@@ -69,3 +71,36 @@ export const markAsReadController = async (req: any, res: Response) => {
     });
   }
 };
+
+export const markAllAsReadController = async (
+  req: any,
+  res: Response,
+  next: any,
+) => {
+  try {
+    const workspaceId = Number(req.params.workspaceId);
+    const userId = req.user.userId;
+
+    const result = await markAllAsReadService(workspaceId, userId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clearAllNotificationsController = async (
+  req: any,
+  res: Response,
+  next: any,
+) => {
+  try {
+    const workspaceId = Number(req.params.workspaceId);
+    const userId = req.user.userId;
+
+    const result = await clearAllNotificationsService(workspaceId, userId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+

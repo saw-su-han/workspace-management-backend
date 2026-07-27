@@ -101,7 +101,7 @@ export const createTaskService = async (
     await createNotificationService({
       workspaceId,
       type: "TASK_ASSIGNED",
-      message: `You were assigned to task "${task.title}" by user ${userId}`,
+      message: `You were assigned to task "${task.title}" by  ${assignedUser?.name}`,
       taskId: task.id,
       userIds: [assignedTo],
     });
@@ -243,7 +243,7 @@ export const assignTaskService = async (
   await createNotificationService({
     workspaceId,
     type: "TASK_ASSIGNED",
-    message: `You were assigned to task "${task.title}" by user ${userId}`,
+    message: `You were assigned to task "${task.title}" by ${assigner_user?.name || "someone"}`,
     taskId,
     userIds: [assignedTo],
   });
@@ -252,7 +252,7 @@ export const assignTaskService = async (
     await createNotificationService({
       workspaceId,
       type: "TASK_UNASSIGNED",
-      message: `You were unassigned from task "${task.title}" by user ${userId}`,
+      message: `You were unassigned from task "${task.title}" by ${assigner_user?.name || "someone"}`,
       taskId,
       userIds: [previousAssigneeId!],
     });

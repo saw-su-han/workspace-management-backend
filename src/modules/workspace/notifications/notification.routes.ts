@@ -1,8 +1,9 @@
 import express from "express";
 import { authMiddleware } from "../../../middleware/auth.middleware.js";
 import {
-  createNotificationController,
+  clearAllNotificationsController,
   getNotificationsController,
+  markAllAsReadController,
   markAsReadController,
 } from "./notification.controller.js";
 import { upload } from "../../../middleware/upload.middleware.js";
@@ -21,7 +22,7 @@ router.post(
 router.post(
   "/workspaces/:workspaceId/notifications",
   authMiddleware,
-  asyncHandler(createNotificationController),
+  asyncHandler(getNotificationsController),
 );
 
 router.get(
@@ -35,5 +36,9 @@ router.patch(
   authMiddleware,
   asyncHandler(markAsReadController),
 );
+router.patch("/workspaces/:workspaceId/notifications/read-all", authMiddleware, markAllAsReadController);
+
+router.delete("/workspaces/:workspaceId/notifications/delete", authMiddleware, clearAllNotificationsController);
+
 
 export default router;
