@@ -21,7 +21,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "http://172.17.5.11:5173", // replace with your actual hostname -I output
+      "https://workspace-management-backend-production.up.railway.app/", // replace with your actual hostname -I output
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
