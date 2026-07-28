@@ -42,7 +42,7 @@ export const getCommentsController = async (req: any, res: any) => {
 };
 
 export const updateCommentController = async (
-  req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {
@@ -73,7 +73,7 @@ export const updateCommentController = async (
 };
 
 export const deleteCommentController = async (
-  req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {

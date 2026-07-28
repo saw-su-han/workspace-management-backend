@@ -12,51 +12,43 @@ export const getCommentsService = async (
             workspaceId_userId: {
                 workspaceId,
                 userId,
-            },
-        },
+            }
+        }
     });
 
     if (!member) {
         throw new AppError("You are not a member of this workspace", 403);
     }
 
-    const task = await prisma.task.findFirst({
-        where: {
-            id: taskId,
-            workspaceId,
-            isDeleted: false,
-        },
-    });
-
-    if (!task) {
-        throw new AppError("Task not found in this workspace", 404);
-    }
-
     const comments = await prisma.comment.findMany({
         where: {
             taskId,
+            task: {
+                workspaceId,
+                isDeleted: false,
+            }
         },
         orderBy: {
-            createdAt: "asc",
+            createdAt: 'asc',
         },
         select: {
             id: true,
             content: true,
             createdAt: true,
+            updatedAt: true,
             author: {
                 select: {
                     id: true,
                     name: true,
                     email: true,
                     avatar: true,
-                },
-            },
-        },
+                }
+            }
+        }
     });
 
     return comments;
 };
-
 
 export const updateCommentService = async (
     userId: number,
@@ -64,7 +56,6 @@ export const updateCommentService = async (
     taskId: number,
     commentId: number,
     content: string,
-
 ) => {
     const member = await prisma.workspaceMember.findUnique({
         where: {
@@ -76,7 +67,26 @@ export const updateCommentService = async (
     });
 
     if (!member) {
-        throw new AppError("You are not a member of this workspace");
+        throw new AppError("You are not a member of this workspace", 403);
+    }
+
+    const comment = await prisma.comment.findFirst({
+        where: {
+            id: commentId,
+            taskId,
+            task: {
+                workspaceId,
+                isDeleted: false,
+            }
+        }
+    });
+
+    if (!comment) {
+        throw new AppError("Comment not found", 404);
+    }
+
+    if (comment.authorId !== userId) {
+        throw new AppError("You can only edit your own comment", 403);
     }
 
     const updatedComment = await prisma.comment.update({
@@ -91,11 +101,18 @@ export const updateCommentService = async (
             content: true,
             createdAt: true,
             updatedAt: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatar: true,
+                }
+            }
         }
     });
     return updatedComment;
-}
-
+};
 
 export const deleteCommentService = async (
     userId: number,

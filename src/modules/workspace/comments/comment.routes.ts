@@ -6,13 +6,14 @@ import { asyncHandler } from "../../../errors/asyncHandler.js";
 const router = express.Router();
 router.post("/comments", authMiddleware, asyncHandler(createCommentController));
 router.get("/workspaces/:workspaceId/tasks/:taskId/comments", authMiddleware, asyncHandler(getCommentsController));
-router.put(
-    "/workspaces/:workspaceId/tasks/:taskId/comments/:commentId",
+
+router.patch(
+    "/workspaces/:workspaceId/tasks/:taskId/comments/:commentId", authMiddleware,
     updateCommentController
 );
 
 router.delete(
-    "/workspaces/:workspaceId/tasks/:taskId/comments/:commentId",
+    "/workspaces/:workspaceId/tasks/:taskId/comments/:commentId", authMiddleware,
     deleteCommentController
 );
 
