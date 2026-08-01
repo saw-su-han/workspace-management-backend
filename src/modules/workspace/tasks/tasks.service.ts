@@ -310,6 +310,8 @@ export const assignTaskService = async (
 export const getTasksQueryService = async (
   userId: number,
   workspaceId: number,
+  page: number = 1,
+  limit: number = 5,
   search?: string,
   status?: "TODO" | "IN_PROGRESS" | "DONE",
   assignedTo?: number,

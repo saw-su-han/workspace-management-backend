@@ -177,3 +177,31 @@ export const clearAllNotificationsService = async (
 
   return result;
 };
+
+export const getUnreadNotificationCountService = async (workspaceId: number,
+  userId: number,
+) => {
+  const member = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId, userId,
+      },
+    }
+  });
+
+  if (!member) {
+    throw new AppError("You are not a member of this workspace")
+  }
+
+  const count = await prisma.userNotification.count({
+    where: {
+      userId,
+      isRead: false,
+      isDeleted: false,
+      notification: {
+        workspaceId,
+      }
+    }
+  });
+  return { count };
+}

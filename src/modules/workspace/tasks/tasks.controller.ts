@@ -85,8 +85,8 @@ export const getTasksQueryController = async (req: any, res: any) => {
       workspaceId,
       search,
       status,
-      assignedTo ? Number(assignedTo) : undefined,
-      projectId ? Number(projectId) : undefined,
+      assignedTo || undefined,
+      projectId || undefined,
     );
 
     return res.status(200).json({
@@ -99,7 +99,8 @@ export const getTasksQueryController = async (req: any, res: any) => {
       message: error.message,
     });
   }
-}; export const getTaskDetailsController = async (req: any, res: any) => {
+};
+export const getTaskDetailsController = async (req: any, res: any) => {
   try {
     const workspaceId = Number(req.params.workspaceId);
     const taskId = Number(req.params.taskId);

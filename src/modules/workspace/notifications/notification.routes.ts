@@ -3,6 +3,7 @@ import { authMiddleware } from "../../../middleware/auth.middleware.js";
 import {
   clearAllNotificationsController,
   getNotificationsController,
+  getUnreadNotificationCountController,
   markAllAsReadController,
   markAsReadController,
 } from "./notification.controller.js";
@@ -19,12 +20,6 @@ router.post(
   asyncHandler(createWorkspaceController),
 );
 
-router.post(
-  "/workspaces/:workspaceId/notifications",
-  authMiddleware,
-  asyncHandler(getNotificationsController),
-);
-
 router.get(
   "/workspaces/:workspaceId/notifications",
   authMiddleware,
@@ -36,9 +31,23 @@ router.patch(
   authMiddleware,
   asyncHandler(markAsReadController),
 );
-router.patch("/workspaces/:workspaceId/notifications/read-all", authMiddleware, markAllAsReadController);
 
-router.delete("/workspaces/:workspaceId/notifications/delete", authMiddleware, clearAllNotificationsController);
+router.patch(
+  "/workspaces/:workspaceId/notifications/read-all",
+  authMiddleware,
+  asyncHandler(markAllAsReadController),
+);
 
+router.delete(
+  "/workspaces/:workspaceId/notifications/delete",
+  authMiddleware,
+  asyncHandler(clearAllNotificationsController),
+);
+
+router.get(
+  "/workspaces/:workspaceId/notifications/unread-count",
+  authMiddleware,
+  asyncHandler(getUnreadNotificationCountController),
+);
 
 export default router;

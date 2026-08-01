@@ -15,6 +15,6 @@ router.get(
 router.get(
   "/workspaces/:workspaceId/dashboard-details",
   authMiddleware,
-  getDetailsDashboardController,
+  asyncHandler(getDetailsDashboardController),
 );
 export default router;

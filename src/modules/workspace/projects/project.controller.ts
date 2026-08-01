@@ -8,6 +8,7 @@ import {
   getProjectServiceQuery,
   updateProjectService,
 } from "./project.service.js";
+import AppError from "../../../errors/AppError.js";
 
 export const createProjectController = async (req: any, res: any) => {
   const workspaceId = Number(req.body.workspaceId);
@@ -165,9 +166,13 @@ export const assignProjectController = async (req: any, res: any) => {
 
 export const updateProjectController = async (req: any, res: any) => {
   try {
-    const workspaceId = req.body.workspaceId;
+    const workspaceId = Number(req.body.workspaceId);
     const projectId = Number(req.params.projectId);
     const userId = req.user.userId;
+
+    if (!workspaceId) {
+      throw new AppError("Work space is is required!")
+    }
 
     const result = await updateProjectService(
       userId,

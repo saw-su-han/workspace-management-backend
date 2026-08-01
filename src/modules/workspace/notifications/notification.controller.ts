@@ -1,7 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   clearAllNotificationsService,
   createNotificationService,
+  getUnreadNotificationCountService,
   getUserNotificationsService,
   markAllAsReadService,
   markAsReadService,
@@ -104,3 +105,18 @@ export const clearAllNotificationsController = async (
   }
 };
 
+export const getUnreadNotificationCountController = async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const workspaceId = Number(req.params.workspaceId);
+    const userId = req.user.userId;
+
+    const result = await getUnreadNotificationCountService(workspaceId, userId);
+
+    res.status(200).json({
+      status: "success",
+      data: result,
+    })
+  } catch (error) {
+    next(error);
+  }
+}

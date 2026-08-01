@@ -315,7 +315,7 @@ export const updateProjectService = async (
   workspaceId: number,
   projectId: number,
   data: {
-    workspaceId?: number; // allow optional move
+    workspaceId?: number;
     name?: string;
     description?: string;
     status?: "PLANNING" | "ACTIVE" | "COMPLETED";
@@ -395,6 +395,7 @@ export const updateProjectService = async (
 
   return updatedProject;
 };
+
 export const deleteProjectService = async (
   userId: number,
   workspaceId: number,
