@@ -5,6 +5,12 @@ import { generateRefreshToken, generateToken } from "../../utils/jwt.utility.js"
 import { AppError } from "../../errors/AppError.js";
 import { RegisterFiles } from "./auth.types.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { transport } from "winston";
+import { transporter } from "../../utils/mail.js";
+import { logger } from "../../utils/logger.js";
+import { passwordResetEmailTemplate, verificationEmailTemplate } from "../../utils/emailtemplate.js";
+import { email, success } from "zod";
 
 export const register = async (data: registerInput, files: RegisterFiles) => {
   const { workspaceName, email, name, password } = data;
@@ -12,10 +18,7 @@ export const register = async (data: registerInput, files: RegisterFiles) => {
   const logoFile = files && files.logo ? files.logo[0] : null;
   const avatarFile = files && files.avatar ? files.avatar[0] : null;
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-
+  const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new AppError("Email already exists", 409);
   }
@@ -23,25 +26,90 @@ export const register = async (data: registerInput, files: RegisterFiles) => {
   const existingWorkspace = await prisma.workspace.findUnique({
     where: { name: workspaceName },
   });
-
   if (existingWorkspace) {
     throw new AppError("Workspace name already exists", 409);
   }
+
+  // clear out any previous pending registration for this email
+  await prisma.pendingRegistration.deleteMany({ where: { email } });
+
   const hashedPassword = await bcrypt.hash(password, 10);
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+  const pendingData = await prisma.pendingRegistration.create({
+    data: {
+      email,
+      name,
+      password: hashedPassword,
+      workspaceName,
+      logo: logoFile?.path ?? null,
+      avatar: avatarFile?.path ?? null,
+      code: verificationCode,
+      expiresAt: verificationCodeExpires,
+    },
+  });
+
+  // plug in your actual mail sender here
+  await transporter.sendMail({
+    from: `"Your App Name" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Verify your email address",
+    html: verificationEmailTemplate(pendingData.code, name),
+  });
+
+  logger.info(`Verification code sent to ${email}`);
+
+  return {
+    success: true,
+    message: "Verification code sent to your email",
+  };
+};
+
+
+export const verifyEmail = async (email: string, code: string) => {
+  const pending = await prisma.pendingRegistration.findUnique({
+    where: { email_code: { email, code } },
+  });
+
+  if (!pending) {
+    throw new AppError("Invalid verification code", 400);
+  }
+
+  if (new Date() > pending.expiresAt) {
+    await prisma.pendingRegistration.delete({ where: { id: pending.id } });
+    throw new AppError("Verification code has expired", 400);
+  }
+
+  // re-check in case someone registered the same email/workspace in the meantime
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    await prisma.pendingRegistration.delete({ where: { id: pending.id } });
+    throw new AppError("Email already exists", 409);
+  }
+
+  const existingWorkspace = await prisma.workspace.findUnique({
+    where: { name: pending.workspaceName },
+  });
+  if (existingWorkspace) {
+    await prisma.pendingRegistration.delete({ where: { id: pending.id } });
+    throw new AppError("Workspace name already exists", 409);
+  }
 
   const workspace = await prisma.workspace.create({
     data: {
-      name: workspaceName,
-      logo: logoFile?.path ?? null,
+      name: pending.workspaceName,
+      logo: pending.logo,
     },
   });
 
   const user = await prisma.user.create({
     data: {
-      email,
-      name,
-      password: hashedPassword,
-      avatar: avatarFile?.path ?? null,
+      email: pending.email,
+      name: pending.name,
+      password: pending.password,
+      avatar: pending.avatar,
+      isVerified: true,
     },
   });
 
@@ -53,21 +121,28 @@ export const register = async (data: registerInput, files: RegisterFiles) => {
     },
   });
 
+  await prisma.pendingRegistration.delete({ where: { id: pending.id } });
+
   const token = generateToken({
     userId: user.id,
     workspaceId: workspace.id,
     role: "OWNER",
   });
 
+  logger.info(`Email verified and user created: ${email}`);
+
   return {
     success: true,
-    message: "User registered successfully",
+    message: "Email verified successfully",
     data: {
       token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
+        avatar: user.avatar,
+        workspaceId: workspace.id,
+        role: "OWNER",
       },
     },
   };
@@ -363,5 +438,88 @@ export const signupWithInvitation = async (data: any, files: RegisterFiles) => {
       },
       role: invitation.role,
     },
+  };
+};
+
+
+export const forgotPassword = async (data: registerInput) => {
+  const { email } = data;
+  const user = await prisma.user.findUnique({
+    where: {
+      email
+    }
+  });
+
+  if (!user) {
+    throw new AppError("No account found with this email address.", 404);
+  }
+
+  const resetCode = crypto.randomInt(100000, 999999).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+  await prisma.passwordReset.upsert({
+    where: { email },
+    update: { code: resetCode, expiresAt, createdAt: new Date() },
+    create: { email, code: resetCode, expiresAt },
+  });
+
+  const template = passwordResetEmailTemplate(user.name, resetCode);
+
+  try {
+    await transporter.sendMail({
+      from: `"ProjectHive" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset Password",
+      html: template,
+    });
+
+    logger.info(`Password reset code sent to ${email}`);
+
+    return {
+      success: true,
+      message: "Reset code sent to your email",
+    };
+  } catch (err) {
+    logger.error("Failed to send reset code:", err);
+    throw new AppError("Failed to send reset code. Please try again.", 500);
+  }
+};
+
+export const resetPassword = async ({
+  email,
+  code,
+  newPassword,
+}: {
+  email: string;
+  code: string;
+  newPassword: string;
+}) => {
+  const reset = await prisma.passwordReset.findUnique({
+    where: { email },
+  });
+
+  if (!reset || reset.code !== code) {
+    throw new AppError("Invalid or expired reset code.", 400);
+  }
+
+  if (reset.expiresAt < new Date()) {
+    await prisma.passwordReset.delete({ where: { email } });
+    throw new AppError("Reset code has expired. Please request a new one.", 400);
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await prisma.user.update({
+    where: { email },
+    data: { password: hashedPassword },
+  });
+
+  await prisma.passwordReset.delete({ where: { email } });
+
+  logger.info(`Password reset successful for ${email}`);
+
+  return {
+    success: true,
+    message: "Password has been reset. You can now log in.",
   };
 };

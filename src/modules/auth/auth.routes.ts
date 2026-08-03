@@ -1,12 +1,15 @@
 import express from "express";
 import multer from "multer"; // 1. CRITICAL: Added this import to prevent the ReferenceError
 import {
+  forgotPasswordController,
   getProfileController,
   loginController,
   logoutController,
   refreshTokenController,
   registerController,
+  resetPasswordHandler,
   updateProfileController,
+  verifyEmailController,
 } from "./auth.controller.js";
 import { loginSchema, registerSchema } from "./auth.schema.js";
 import { upload } from "../../middleware/upload.middleware.js";
@@ -75,4 +78,7 @@ router.get(
   asyncHandler(getProjectDetailsHandler),
 );
 
+router.post("/verify-email", asyncHandler(verifyEmailController))
+router.post("/forgot-password", asyncHandler(forgotPasswordController))
+router.post("/reset-password", asyncHandler(resetPasswordHandler))
 export default router;

@@ -27,8 +27,33 @@ model User {
   assignedTasks       Task[]             @relation("TaskAssignee")
   userNotifications   UserNotification[]
   memberships         WorkspaceMember[]
+  isVerified    Boolean  @default(false) 
+
 }
 
+model PendingRegistration {
+  id            Int      @id @default(autoincrement())
+  email         String
+  code          String
+  password      String
+  name          String
+  workspaceName String
+  logo          String?
+  avatar        String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@unique([email, code])
+}
+
+model PasswordReset{
+  id    Int @id @default(autoincrement())
+  email String @unique
+  code String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+}
 model Workspace {
   name          String            @unique
   createdAt     DateTime          @default(now())

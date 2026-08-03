@@ -1,6 +1,8 @@
 import * as authService from "./auth.service.js";
 import { Request, Response, NextFunction } from "express";
 import { RegisterFiles } from "./auth.types.js";
+import { resetPasswordSchema } from "./auth.schema.js";
+import AppError from "../../errors/AppError.js";
 
 export const registerController = async (
   req: Request,
@@ -53,7 +55,29 @@ export const loginController = async (
     });
   }
 };
-export const refreshTokenController = async (
+
+export const verifyEmailController = async (
+  req: any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and verification code are required",
+      });
+    }
+
+    const result = await authService.verifyEmail(email, code);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}; export const refreshTokenController = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -172,5 +196,53 @@ export const updateProfileController = async (
       success: false,
       message: err.message || "Internal server error",
     });
+  }
+};
+
+export const forgotPasswordController = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      })
+    }
+    const result = await authService.forgotPassword(req.body);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    return res.status(err.statusCode || 400).json({
+      success: false,
+      message: err.message,
+    })
+  }
+}
+
+
+
+export const resetPasswordHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const parsed = resetPasswordSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      const firstError = "Invalid input.";
+      throw new AppError(firstError, 400);
+    }
+
+    const { email, code, newPassword } = parsed.data;
+
+    const result = await authService.resetPassword({ email, code, newPassword });
+
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
   }
 };
