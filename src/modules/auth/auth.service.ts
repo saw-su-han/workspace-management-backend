@@ -50,23 +50,27 @@ export const register = async (data: registerInput, files: RegisterFiles) => {
     },
   });
 
-  // plug in your actual mail sender here
-  await transporter.sendMail({
-    from: `"Your App Name" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Verify your email address",
-    html: verificationEmailTemplate(pendingData.code, name),
-  });
+  const template = verificationEmailTemplate(pendingData.name, pendingData.code);
 
-  logger.info(`Verification code sent to ${email}`);
+  try {
+    await transporter.sendMail({
+      from: `"ProjectHive" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset Password",
+      html: template,
+    });
 
-  return {
-    success: true,
-    message: "Verification code sent to your email",
-  };
+    logger.info(`Password reset code sent to ${email}`);
+
+    return {
+      success: true,
+      message: "Reset code sent to your email",
+    };
+  } catch (err) {
+    logger.error("Failed to send reset code:", err);
+    throw new AppError("Failed to send reset code. Please try again.", 500);
+  }
 };
-
-
 export const verifyEmail = async (email: string, code: string) => {
   const pending = await prisma.pendingRegistration.findUnique({
     where: { email_code: { email, code } },
