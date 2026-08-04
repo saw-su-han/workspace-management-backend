@@ -1,7 +1,7 @@
 import * as authService from "./auth.service.js";
 import { Request, Response, NextFunction } from "express";
 import { RegisterFiles } from "./auth.types.js";
-import { resetPasswordSchema } from "./auth.schema.js";
+import { changePasswordSchema, resetPasswordSchema, verifyResetCodeSchema } from "./auth.schema.js";
 import AppError from "../../errors/AppError.js";
 
 export const registerController = async (
@@ -240,6 +240,49 @@ export const resetPasswordHandler = async (
     const { email, code, newPassword } = parsed.data;
 
     const result = await authService.resetPassword({ email, code, newPassword });
+
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// interface AuthenticatedRequest extends Request {
+//   user?: { userId: number; workspaceId: number; role: string };
+// }
+
+export const changePassword = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+
+    const result = await authService.changePasswordService(userId!, currentPassword, newPassword);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const verifyResetCodeHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const parsed = verifyResetCodeSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      throw new AppError("Invalid input.", 400);
+    }
+
+    const { email, code } = parsed.data;
+    const result = await authService.verifyResetCodeService(email, code);
 
     res.status(200).json(result);
   } catch (err) {

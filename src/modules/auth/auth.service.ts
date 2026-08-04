@@ -523,3 +523,62 @@ export const resetPassword = async ({
     message: "Password has been reset. You can now log in.",
   };
 };
+
+export const changePasswordService = async (
+  userId: number,
+  currentPassword: string,
+  newPassword: string
+) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, password: true },
+  });
+
+  if (!user) {
+    throw new AppError("User not found", 404)
+  }
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
+
+  if (!isPasswordValid) {
+    throw new AppError("Current password is incorrect", 401)
+  }
+
+  if (currentPassword === newPassword) {
+    throw new AppError("Current password and new password cannot be same.", 400)
+  }
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10)
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedNewPassword },
+  });
+
+  logger.info(`Password changed successfully for user ${userId}`);
+
+  return {
+    success: true,
+    message: "Password has been changed successfully",
+  };
+}
+
+export const verifyResetCodeService = async (email: string, code: string) => {
+  const reset = await prisma.passwordReset.findUnique({
+    where: { email },
+  });
+
+  if (!reset || reset.code !== code) {
+    throw new AppError("Invalid or expired reset code.", 400);
+  }
+
+  if (reset.expiresAt < new Date()) {
+    await prisma.passwordReset.delete({ where: { email } });
+    throw new AppError("Reset code has expired. Please request a new one.", 400);
+  }
+
+  return {
+    success: true,
+    message: "Reset code is valid",
+  };
+}
