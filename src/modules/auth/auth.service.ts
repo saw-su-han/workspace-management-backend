@@ -56,19 +56,19 @@ export const register = async (data: registerInput, files: RegisterFiles) => {
     await transporter.sendMail({
       from: `"ProjectHive" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "Reset Password",
+      subject: "Verify Your Email",
       html: template,
     });
 
-    logger.info(`Password reset code sent to ${email}`);
+    logger.info(`Verify code sent to ${email}`);
 
     return {
       success: true,
-      message: "Reset code sent to your email",
+      message: "Verify code sent to your email",
     };
   } catch (err) {
-    logger.error("Failed to send reset code:", err);
-    throw new AppError("Failed to send reset code. Please try again.", 500);
+    logger.error("Failed to send verify code:", err);
+    throw new AppError("Failed to send verify code. Please try again.", 500);
   }
 };
 export const verifyEmail = async (email: string, code: string) => {
