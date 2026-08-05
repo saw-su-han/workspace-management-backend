@@ -62,6 +62,10 @@ export const register = async (data: registerInput, files: RegisterFiles) => {
 
     logger.info(`Verify code sent to ${email}`);
 
+    console.log("email-host", process.env.EMAIL_HOST);
+    console.log("email-port", process.env.EMAIL_PORT);
+    console.log("email-user", process.env.EMAIL_USER);
+    console.log("email-pass", process.env.EMAIL_PASS);
     return {
       success: true,
       message: "Verify code sent to your email",
