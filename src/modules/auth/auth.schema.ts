@@ -4,12 +4,23 @@ export const registerSchema = z.object({
   workspaceName: z.string().min(2),
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z
+    .string()
+    .min(8, "At least 8 characters")
+    .regex(/[A-Z]/, "Must include an uppercase letter")
+    .regex(/[a-z]/, "Must include a lowercase letter")
+    .regex(/[0-9]/, "Must include a number")
+    .regex(/[^A-Za-z0-9]/, "Must include a symbol"),
 });
 
 export const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string()
+    .min(8, "At least 8 characters")
+    .regex(/[A-Z]/, "Must include an uppercase letter")
+    .regex(/[a-z]/, "Must include a lowercase letter")
+    .regex(/[0-9]/, "Must include a number")
+    .regex(/[^A-Za-z0-9]/, "Must include a symbol"),
 });
 
 
@@ -58,3 +69,16 @@ export const verifyResetCodeSchema = z.object({
   code: z.string().length(6, "Code must be 6 digits"),
 });
 export type verifyResetCodeInput = z.infer<typeof verifyResetCodeSchema>;
+
+export const signupWithInvitationSchema = z.object({
+  token: z.string().min(1, "Invitation token is required"),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  password: z
+    .string()
+    .min(8, "At least 8 characters")
+    .regex(/[A-Z]/, "Must include an uppercase letter")
+    .regex(/[a-z]/, "Must include a lowercase letter")
+    .regex(/[0-9]/, "Must include a number")
+    .regex(/[^A-Za-z0-9]/, "Must include a symbol"),
+});
+export type signupWithInvitationInput = z.infer<typeof signupWithInvitationSchema>;

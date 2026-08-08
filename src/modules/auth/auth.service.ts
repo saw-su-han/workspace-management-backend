@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../../utils/prisma.js";
-import { loginInput, registerInput } from "./auth.schema.js";
+import { loginInput, registerInput, signupWithInvitationInput } from "./auth.schema.js";
 import { generateRefreshToken, generateToken } from "../../utils/jwt.utility.js";
 import { AppError } from "../../errors/AppError.js";
 import { RegisterFiles } from "./auth.types.js";
@@ -377,7 +377,7 @@ export const updateProfileService = async (
   // 3. Reuse getProfileService so the returned structure matches perfectly!
   return await getProfileService(userId);
 };
-export const signupWithInvitation = async (data: any, files: RegisterFiles) => {
+export const signupWithInvitation = async (data: signupWithInvitationInput, files: RegisterFiles) => {
   const { token, name, password } = data;
 
   const invitation = await prisma.invitation.findUnique({

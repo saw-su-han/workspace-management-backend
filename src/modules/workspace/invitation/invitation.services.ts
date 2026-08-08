@@ -97,14 +97,60 @@ export const inviteUserService = async (
     to: email,
     subject: "Workspace Invitation",
     html: `
-    <h2>Workspace Invitation</h2>
-    <p>You have been invited as <b>${role}</b></p>
-    <a href="${invitationLink}">Accept Invitation</a>
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workspace Invitation</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f4f5f7; font-family: 'Segoe UI', Arial, sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7; padding:40px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+            <tr>
+              <td style="background: linear-gradient(135deg, #059669, #0f766e); padding:28px 32px;">
+                <span style="color:#ffffff; font-size:20px; font-weight:800; letter-spacing:-0.5px;">
+                  Project<span style="color:#d1fae5;">Hive</span>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <h2 style="margin:0 0 12px; font-size:20px; color:#111827;">You're invited</h2>
+                <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:#4b5563;">
+                  You've been invited to join a workspace on ProjectHive as
+                  <strong>${role}</strong>. Accept the invitation below to get started.
+                </p>
+                <div style="text-align:center; margin:28px 0;">
+                  <a href="${invitationLink}" style="display:inline-block; background-color:#059669; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; padding:14px 32px; border-radius:12px;">
+                    Accept Invitation
+                  </a>
+                </div>
+                <p style="margin:0 0 8px; font-size:13px; line-height:1.6; color:#6b7280;">
+                  If you weren't expecting this invitation, you can safely ignore this email.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 32px; background-color:#f9fafb; border-top:1px solid #f0f0f0;">
+                <p style="margin:0; font-size:11px; color:#9ca3af; text-align:center;">
+                  © ${new Date().getFullYear()} ProjectHive · Secure Corporate Provisioning
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>
   `,
   });
 
-  console.log(info);
-  console.log("Invitation Link:", invitationLink);
+  // console.log(info);
+  // console.log("Invitation Link:", invitationLink);
 
   return invitation;
 };
